@@ -24,7 +24,12 @@ export function Navigation() {
       {/* Top Navigation - Desktop only */}
       <nav className="hidden md:flex border-b bg-white justify-between items-center h-auto px-6">
         <div className="flex gap-8 items-center">
-          <NavItem href="/plants" icon={<Home className="h-5 w-5" />} label="Plants" active={pathname === "/plants"} />
+          <NavItem
+            href="/plants"
+            icon={<Home className="h-5 w-5" />}
+            label="Plants"
+            active={pathname === "/plants"}
+          />
           <NavItem
             href="/events"
             icon={<CalendarDays className="h-5 w-5" />}
@@ -59,16 +64,20 @@ export function Navigation() {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => signOut({
-              fetchOptions: {
-                onSuccess: () => {
-                  redirect("/");
-                },
-                onError: (ctx) => {
-                  console.error("Sign out error:", ctx.error);
-                },
-              }
-            })}>
+            <DropdownMenuItem
+              onClick={() => {
+                signOut({
+                  fetchOptions: {
+                    onSuccess: () => {
+                      redirect("/");
+                    },
+                    onError: (ctx) => {
+                      console.error("Sign out error:", ctx.error);
+                    },
+                  },
+                });
+              }}
+            >
               <LogOut className="mr-2 h-4 w-4" />
               Log out
             </DropdownMenuItem>
@@ -78,7 +87,12 @@ export function Navigation() {
 
       {/* Bottom Navigation - Mobile only */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-white flex justify-around items-center h-16 px-2 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">
-        <MobileNavItem href="/plants" icon={<Home className="h-6 w-6" />} label="Plants" active={pathname === "/plants"} />
+        <MobileNavItem
+          href="/plants"
+          icon={<Home className="h-6 w-6" />}
+          label="Plants"
+          active={pathname === "/plants"}
+        />
         <MobileNavItem
           href="/events"
           icon={<CalendarDays className="h-6 w-6" />}
@@ -99,7 +113,7 @@ export function Navigation() {
         />
       </nav>
     </>
-  )
+  );
 }
 
 interface NavItemProps {
