@@ -3,7 +3,6 @@ import type { NextRequest } from 'next/server';
 import { getSessionCookie } from "better-auth/cookies";
 
 const GUEST_ONLY_PATHS = ['/signin', '/signup'];
-const USER_ONLY_PATHS = ['/plants', '/account'];
 
 export function middleware(request: NextRequest) {
   // Get the session cookie to determine if the user might be logged in
@@ -14,9 +13,8 @@ export function middleware(request: NextRequest) {
   const shouldBeLoggedIn = !!sessionCookie;
 
   const isForGuestOnly = GUEST_ONLY_PATHS.includes(pathname);
-  const isForUserOnly = USER_ONLY_PATHS.includes(pathname);
 
-  if (shouldBeLoggedIn && !isForUserOnly) {
+  if (shouldBeLoggedIn && isForGuestOnly) {
     return NextResponse.redirect(new URL('/plants', request.url));
   }
 

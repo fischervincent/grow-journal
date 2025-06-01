@@ -1,9 +1,22 @@
 import { z } from "zod";
 
+// Helper function to generate a URL-friendly slug
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric chars with hyphens
+    .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+}
+
 export type Plant = {
   name: string;
+  slug: string;
   species: string | undefined;
   location: string | undefined;
+}
+
+export type PlantWithId = Plant & {
+  id: string;
 }
 
 const PLANT_CREATION_ERRORS = {
@@ -51,6 +64,7 @@ export const createNewPlant = (newPlantInput: {
   return [
     {
       name: parseResult.data.name,
+      slug: generateSlug(parseResult.data.name),
       species: parseResult.data.speciesName,
       location: newPlantInput.location,
     },
