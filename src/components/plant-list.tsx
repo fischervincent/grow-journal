@@ -1,13 +1,11 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Droplet, Flower, Plus, Search } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { PlantCard } from "./plant-card"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Droplet, Flower, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { PlantCard } from "./plant-card";
+import { NewPlantDialog } from "./new-plant-dialog";
 
 // Sample plant data
 const initialPlants = [
@@ -71,103 +69,70 @@ const initialPlants = [
     fertilizingFrequency: 45, // days
     location: "Bathroom",
   },
-]
+];
 
 export default function PlantList() {
-  const [plants, setPlants] = useState(initialPlants)
-  const [filter, setFilter] = useState("all")
-  const [searchQuery, setSearchQuery] = useState("")
+  const [plants, setPlants] = useState(initialPlants);
+  const [filter, setFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Calculate days until watering/fertilizing is needed
   const calculateDaysUntil = (lastDate: Date, frequency: number) => {
-    const daysSince = Math.floor((Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24))
-    return frequency - daysSince
-  }
+    const daysSince = Math.floor(
+      (Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    return frequency - daysSince;
+  };
 
   // Filter plants based on selected filter
   const getFilteredPlants = () => {
-    let filtered = [...plants]
+    let filtered = [...plants];
 
     // Apply search filter
     if (searchQuery) {
       filtered = filtered.filter(
         (plant) =>
           plant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          plant.location.toLowerCase().includes(searchQuery.toLowerCase()),
-      )
+          plant.location.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     }
 
     // Apply category filter
     if (filter === "needs-water") {
       filtered = filtered.sort((a, b) => {
-        const aDays = calculateDaysUntil(a.lastWatered, a.wateringFrequency)
-        const bDays = calculateDaysUntil(b.lastWatered, b.wateringFrequency)
-        return aDays - bDays
-      })
+        const aDays = calculateDaysUntil(a.lastWatered, a.wateringFrequency);
+        const bDays = calculateDaysUntil(b.lastWatered, b.wateringFrequency);
+        return aDays - bDays;
+      });
     } else if (filter === "needs-nutrients") {
       filtered = filtered.sort((a, b) => {
-        const aDays = calculateDaysUntil(a.lastFertilized, a.fertilizingFrequency)
-        const bDays = calculateDaysUntil(b.lastFertilized, b.fertilizingFrequency)
-        return aDays - bDays
-      })
+        const aDays = calculateDaysUntil(
+          a.lastFertilized,
+          a.fertilizingFrequency
+        );
+        const bDays = calculateDaysUntil(
+          b.lastFertilized,
+          b.fertilizingFrequency
+        );
+        return aDays - bDays;
+      });
     }
 
-    return filtered
-  }
+    return filtered;
+  };
 
   return (
     <div className="container px-4 py-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-green-800">My Plants</h1>
-
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="bg-green-600 hover:bg-green-700">
-              <Plus className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Add Plant</span>
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Plant</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="plant-name">Plant Name</Label>
-                <Input id="plant-name" placeholder="Enter plant name" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="plant-location">Location</Label>
-                <Select>
-                  <SelectTrigger id="plant-location">
-                    <SelectValue placeholder="Select location" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="living-room">Living Room</SelectItem>
-                    <SelectItem value="bedroom">Bedroom</SelectItem>
-                    <SelectItem value="kitchen">Kitchen</SelectItem>
-                    <SelectItem value="bathroom">Bathroom</SelectItem>
-                    <SelectItem value="office">Office</SelectItem>
-                    <SelectItem value="balcony">Balcony</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="watering-frequency">Watering Frequency (days)</Label>
-                <Input id="watering-frequency" type="number" min="1" placeholder="7" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="fertilizing-frequency">Fertilizing Frequency (days)</Label>
-                <Input id="fertilizing-frequency" type="number" min="1" placeholder="30" />
-              </div>
-              <Button className="mt-2 bg-green-600 hover:bg-green-700">Add Plant</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <NewPlantDialog />
       </div>
 
       <div className="relative mb-4">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+        <Search
+          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+          size={18}
+        />
         <Input
           className="pl-10 bg-white border-gray-200"
           placeholder="Search plants..."
@@ -179,14 +144,22 @@ export default function PlantList() {
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
         <Button
           variant={filter === "all" ? "default" : "outline"}
-          className={filter === "all" ? "bg-green-600 hover:bg-green-700" : "border-green-200 text-green-800"}
+          className={
+            filter === "all"
+              ? "bg-green-600 hover:bg-green-700"
+              : "border-green-200 text-green-800"
+          }
           onClick={() => setFilter("all")}
         >
           All Plants
         </Button>
         <Button
           variant={filter === "needs-water" ? "default" : "outline"}
-          className={filter === "needs-water" ? "bg-blue-600 hover:bg-blue-700" : "border-blue-200 text-blue-800"}
+          className={
+            filter === "needs-water"
+              ? "bg-blue-600 hover:bg-blue-700"
+              : "border-blue-200 text-blue-800"
+          }
           onClick={() => setFilter("needs-water")}
         >
           <Droplet className="mr-1 h-4 w-4" />
@@ -195,7 +168,9 @@ export default function PlantList() {
         <Button
           variant={filter === "needs-nutrients" ? "default" : "outline"}
           className={
-            filter === "needs-nutrients" ? "bg-amber-600 hover:bg-amber-700" : "border-amber-200 text-amber-800"
+            filter === "needs-nutrients"
+              ? "bg-amber-600 hover:bg-amber-700"
+              : "border-amber-200 text-amber-800"
           }
           onClick={() => setFilter("needs-nutrients")}
         >
@@ -204,7 +179,6 @@ export default function PlantList() {
         </Button>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-
         {getFilteredPlants().map((plant) => (
           <PlantCard
             key={plant.id}
@@ -217,10 +191,10 @@ export default function PlantList() {
             fertilizingFrequency={plant.fertilizingFrequency}
             mayNeedWater={plant.mayNeedWater}
             mayNeedFertilizer={plant.mayNeedFertilizer}
-            location={plant.location}          
+            location={plant.location}
           />
         ))}
       </div>
     </div>
-  )
+  );
 }
