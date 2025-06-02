@@ -4,20 +4,33 @@ import type React from "react"
 
 import { redirect, usePathname } from "next/navigation"
 import Link from "next/link"
-import { Bell, CalendarDays, Home, User, ChevronDown, Settings, LogOut } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import {
+  Bell,
+  CalendarDays,
+  Home,
+  User,
+  ChevronDown,
+  Settings,
+  LogOut,
+  Cog,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { signOut } from "@/lib/auth-client"
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { signOut, useSession } from "@/lib/auth-client";
 
 export function Navigation() {
-  const pathname = usePathname()
+  const pathname = usePathname();
+
+  const { data: session } = useSession();
+  const user = session?.user;
+  const userName = user?.name;
 
   return (
     <>
@@ -52,7 +65,7 @@ export function Navigation() {
                 <AvatarImage src="/placeholderPlant.svg?height=32&width=32" />
                 <AvatarFallback>JD</AvatarFallback>
               </Avatar>
-              <span className="text-sm font-medium">John Doe</span>
+              <span className="text-sm font-medium">{userName}</span>
               <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -61,6 +74,12 @@ export function Navigation() {
               <Link href="/account" className="flex items-center">
                 <Settings className="mr-2 h-4 w-4" />
                 Account Settings
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/event-settings" className="flex items-center">
+                <Cog className="mr-2 h-4 w-4" />
+                Event Settings
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />

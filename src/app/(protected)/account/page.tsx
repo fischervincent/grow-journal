@@ -5,10 +5,14 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { signOut } from "@/lib/auth-client";
+import { signOut, useSession } from "@/lib/auth-client";
 
 export default function AccountPage() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const user = session?.user;
+  const userName = user?.name;
+  const userEmail = user?.email;
 
   return (
     <div className="flex-1 bg-white">
@@ -34,8 +38,8 @@ export default function AccountPage() {
               <AvatarFallback className="text-xl">JD</AvatarFallback>
             </Avatar>
             <div>
-              <h2 className="text-xl font-semibold">John Doe</h2>
-              <p className="text-muted-foreground">john.doe@example.com</p>
+              <h2 className="text-xl font-semibold">{userName}</h2>
+              <p className="text-muted-foreground">{userEmail}</p>
               <button
                 className="text-sm text-blue-600 hover:underline mt-1"
                 onClick={() =>

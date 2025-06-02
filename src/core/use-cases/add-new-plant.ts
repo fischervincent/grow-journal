@@ -7,8 +7,8 @@ interface AddNewPlantDto {
   location: string | undefined;
 }
 
-export const newPlantUseCase = (plantRepository: PlantRepository) => {
-  const newPlant = async (newPlantDto: AddNewPlantDto, userId: string) => {
+export const addNewPlantUseCase = (plantRepository: PlantRepository) => {
+  const addNewPlant = async (newPlantDto: AddNewPlantDto, userId: string) => {
     const [plant, errors] = createNewPlant(newPlantDto);
     if (!plant) return [null, errors];
     await plantRepository.create(plant, userId);
@@ -16,6 +16,6 @@ export const newPlantUseCase = (plantRepository: PlantRepository) => {
   }
 
   return {
-    newPlant,
+    addNewPlant,
   }
 }

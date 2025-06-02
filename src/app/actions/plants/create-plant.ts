@@ -4,7 +4,7 @@ import { getPlantRepository } from "@/lib/repositories/plant-repository-factory"
 import { createNewPlant } from "@/core/domain/plant";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
-import { newPlantUseCase } from "@/core/use-cases/new-plant";
+import { addNewPlantUseCase } from "@/core/use-cases/add-new-plant";
 
 interface CreatePlantInput {
   name: string;
@@ -29,9 +29,11 @@ export async function createPlant(input: CreatePlantInput) {
   }
 
   const plantRepository = getPlantRepository();
-  const { newPlant } = newPlantUseCase(plantRepository);
-  const createdPlant = await newPlant({
-    ...plant,
+  const { addNewPlant } = addNewPlantUseCase(plantRepository);
+  const createdPlant = await addNewPlant({
+    location: plant.location,
+    name: plant.name,
+    species: plant.species,
   }, userId);
 
   return { success: true, data: createdPlant };

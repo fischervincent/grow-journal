@@ -20,17 +20,14 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## TODO
+- Fix plant list page, there are two buttons and the list does not update when new plant
+- register plant event (add PlantEvents table (with plantEventType, comment, plantEventDateTime, plantId, userId, and index on userId and also userId+plantId, and userId+plantId+plantEventType, and userId+plantId+plantEventDateTime), quick action event on PlantList and Plant views, and not quick action on the Plant Detail page)
+- can sort by events in PlantList event and display quickAction event last date
+- in PlantDetails can see every events and we can filter them by plantEventType, or search by text from comment
+- can add/remove pictures of plant, with main picture (displayed for the plant in the PlantList and PlantDetails view)
+- when user is created, wizard to choose (and create ?) event types
+- event types form - add a way to create event types that are suggested, like a dropdown or a list where you can select from
+- form error handling
+- refactor: /actions <- bad name, it's not only server actions
+- feedback on user actions like: creating / deleting an event type

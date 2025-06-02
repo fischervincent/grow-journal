@@ -1,84 +1,87 @@
 "use client";
 
 import type React from "react";
-
 import Image from "next/image";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Droplet, Flower, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import {
+  LastDateByEventTypes,
+  PlantEventType,
+} from "@/core/domain/plant-event-type";
 
 interface PlantCardProps {
   slug: string;
   name: string;
   species?: string;
   image: string;
-  lastWatered: Date;
-  lastFertilized: Date;
   location?: string;
+  lastDateByEvents: LastDateByEventTypes;
+  quickAccessEvents: PlantEventType[];
+  onEventClick: (eventId: string) => void;
 }
 
-export function PlantCard(plant: PlantCardProps) {
-  const router = useRouter();
-
-  const handleCardClick = () => {
-    console.log("clicked", plant.slug);
-    router.push(`/plants/${plant.slug}`);
-  };
-
-  const handleWater = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click when clicking the button
-    // Water logic would go here
-  };
-
-  const handleFertilize = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click when clicking the button
-    // Fertilize logic would go here
-  };
-
+export function PlantCard({
+  slug,
+  name,
+  species,
+  image,
+  location,
+  lastDateByEvents,
+  quickAccessEvents,
+  onEventClick,
+}: PlantCardProps) {
   return (
-    <Link href={`/plants/${plant.slug}`}>
-      <Card
-        className="overflow-hidden cursor-pointer transition-all hover:shadow-md"
-        onClick={handleCardClick}
-      >
-        <div className="relative h-48">
-          <Image
-            src={plant.image}
-            alt={plant.name}
-            fill
-            className="object-cover"
-          />
+    <Card className="overflow-hidden">
+      <Link href={`/plants/${slug}`}>
+        <div className="relative aspect-square">
+          <Image src={image} alt={name} fill className="object-cover" />
         </div>
-        <CardContent className="p-4">
-          <h3 className="font-semibold text-lg mb-2">{plant.name}</h3>
-          <div className="flex items-center text-sm text-gray-500 mb-4">
-            <MapPin className="h-4 w-4 mr-1" />
-            <span>{plant.location}</span>
+      </Link>
+
+      <CardContent className="p-4">
+        <Link href={`/plants/${slug}`} className="hover:underline">
+          <h3 className="font-semibold text-lg">{name}</h3>
+        </Link>
+        {species && <p className="text-sm text-muted-foreground">{species}</p>}
+        {location && (
+          <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
+            <MapPin className="w-4 h-4" />
+            <span>{location}</span>
           </div>
-        </CardContent>
-        <CardFooter className="p-4 pt-0 flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50"
-            onClick={handleWater}
-          >
-            <Droplet className="h-4 w-4 mr-1" />
-            Water
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 border-amber-200 text-amber-700 hover:bg-amber-50"
-            onClick={handleFertilize}
-          >
-            <Flower className="h-4 w-4 mr-1" />
-            Fertilize
-          </Button>
-        </CardFooter>
-      </Card>
-    </Link>
+        )}
+      </CardContent>
+
+      <CardFooter className="p-4 pt-0 flex gap-2 flex-wrap">
+        {quickAccessEvents.map((event) => {
+          const lastEvent = lastDateByEvents[event.id];
+          return (
+            <Button
+              key={event.id}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+              style={{
+                borderColor: event.displayColor,
+                color: event.displayColor,
+              }}
+              onClick={() => onEventClick(event.id)}
+            >
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: event.displayColor }}
+              />
+              <span>{event.name}</span>
+              {lastEvent && (
+                <span className="text-xs text-muted-foreground">
+                  {new Date(lastEvent.lastDate).toLocaleDateString()}
+                </span>
+              )}
+            </Button>
+          );
+        })}
+      </CardFooter>
+    </Card>
   );
 }

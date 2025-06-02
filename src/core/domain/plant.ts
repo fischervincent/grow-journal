@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { LastDateByEventTypes } from "./plant-event-type";
 
 // Helper function to generate a URL-friendly slug
 function generateSlug(name: string): string {
@@ -13,6 +14,7 @@ export type Plant = {
   slug: string;
   species: string | undefined;
   location: string | undefined;
+  lastDateByEvents: LastDateByEventTypes;
 }
 
 export type PlantWithId = Plant & {
@@ -39,7 +41,7 @@ export const NewPlantSchema = z.object({
     .optional()
 })
 
-type CreateNewPlantResult = [Plant, undefined] | [null, PlantCreationError[]]
+export type CreateNewPlantResult = [Plant, undefined] | [null, PlantCreationError[]];
 
 export const createNewPlant = (newPlantInput: {
   name: string;
@@ -67,6 +69,7 @@ export const createNewPlant = (newPlantInput: {
       slug: generateSlug(parseResult.data.name),
       species: parseResult.data.speciesName,
       location: newPlantInput.location,
+      lastDateByEvents: {},
     },
     undefined,
   ]

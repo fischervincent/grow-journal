@@ -1,0 +1,1 @@
+ALTER TABLE "plant_event_types" ADD COLUMN "has_comment" boolean DEFAULT false NOT NULL;

@@ -1,4 +1,4 @@
-import { findPlantBySlug } from "@/app/actions/find-plant-by-slug";
+import { findPlantBySlug } from "@/app/actions/plants/find-plant-by-slug";
 import { PlantDetail } from "@/components/plant-detail";
 import { notFound } from "next/navigation";
 

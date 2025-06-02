@@ -34,5 +34,6 @@ export const config = {
     '/plants',
     '/plants/:path*',
     '/account',
+    '/event-settings',
   ],
 };

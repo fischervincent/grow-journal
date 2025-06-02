@@ -1,0 +1,1 @@
+ALTER TABLE "plant_event_types" RENAME COLUMN "track_last_date" TO "is_sortable_by_date";

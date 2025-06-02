@@ -3,14 +3,16 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { plants } from "../postgres-drizzle/schema/plant-schema";
 import type { PlantRepository } from "../../core/repositories/plant-repository";
 import { Plant, PlantWithId } from "@/core/domain/plant";
+import { LastDateByEventTypes } from "@/core/domain/plant-event-type";
 
 const mapPlantFromDB = (plantInDB: typeof plants.$inferSelect): PlantWithId => {
   return {
     id: plantInDB.id,
     name: plantInDB.name,
-    slug: plantInDB.slug,
     species: plantInDB.species || undefined,
     location: plantInDB.location || undefined,
+    slug: plantInDB.slug,
+    lastDateByEvents: plantInDB.lastDateByEvents as LastDateByEventTypes,
   };
 };
 
@@ -59,4 +61,4 @@ export class DrizzlePlantRepository implements PlantRepository {
     await this.db.delete(plants)
       .where(eq(plants.id, id));
   }
-} 
+}

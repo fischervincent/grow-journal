@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, uniqueIndex, index } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, uniqueIndex, index, jsonb } from "drizzle-orm/pg-core";
 import { users } from "./auth-schema";
 
 export const plants = pgTable("plants", {
@@ -8,6 +8,7 @@ export const plants = pgTable("plants", {
   slug: text('slug').notNull(),
   species: text('species'),
   location: text('location'),
+  lastDateByEvents: jsonb('last_date_by_events').default({}).notNull(),
   createdAt: timestamp('created_at').$defaultFn(() => new Date()).notNull(),
   updatedAt: timestamp('updated_at').$defaultFn(() => new Date()).notNull()
 }, (table) => {

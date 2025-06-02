@@ -1,0 +1,1 @@
+ALTER TABLE "plant_event_types" RENAME COLUMN "quick_access_button" TO "has_quick_access_button";
