@@ -21,9 +21,8 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## TODO
-- Fix plant list page, there are two buttons and the list does not update when new plant
-- register plant event (add PlantEvents table (with plantEventType, comment, plantEventDateTime, plantId, userId, and index on userId and also userId+plantId, and userId+plantId+plantEventType, and userId+plantId+plantEventDateTime), quick action event on PlantList and Plant views, and not quick action on the Plant Detail page)
-- can sort by events in PlantList event and display quickAction event last date
+- delete plant
+- dialog to confirm quick record event
 - in PlantDetails can see every events and we can filter them by plantEventType, or search by text from comment
 - can add/remove pictures of plant, with main picture (displayed for the plant in the PlantList and PlantDetails view)
 - when user is created, wizard to choose (and create ?) event types
