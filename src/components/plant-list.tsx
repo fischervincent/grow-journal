@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { NewPlantDialog } from "./new-plant-dialog";
 import { PlantEventType } from "@/core/domain/plant-event-type";
+import { cn } from "@/lib/utils";
 
 export default function PlantList({
   plants,
@@ -19,6 +20,7 @@ export default function PlantList({
   const [searchQuery, setSearchQuery] = useState("");
   const lastCreatedPlantRef = useRef<HTMLDivElement>(null);
   const [newPlantId, setNewPlantId] = useState<string | null>(null);
+  const [shouldAnimate, setShouldAnimate] = useState(false);
 
   const getFilteredPlants = (plants: PlantWithId[]) => {
     let filtered = [...plants];
@@ -40,19 +42,40 @@ export default function PlantList({
     } else if (filter === "outdoor") {
       filtered = filtered.filter((plant) => plant.location === "outdoor");
     }
+
     return filtered;
   };
 
   const handlePlantCreated = (plantId: string) => {
     setNewPlantId(plantId);
+    setShouldAnimate(false);
   };
 
   useEffect(() => {
-    lastCreatedPlantRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
-    });
-  }, [plants]);
+    if (newPlantId) {
+      // First scroll instantly to the new plant
+      lastCreatedPlantRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+
+      // Then trigger the animation after a small delay
+      const animationTimeout = setTimeout(() => {
+        setShouldAnimate(true);
+      }, 500);
+
+      // Clear the plant ID and animation state after animation completes
+      const cleanupTimeout = setTimeout(() => {
+        setNewPlantId(null);
+        setShouldAnimate(false);
+      }, 2500); // animation duration (2s) + small buffer
+
+      return () => {
+        clearTimeout(animationTimeout);
+        clearTimeout(cleanupTimeout);
+      };
+    }
+  }, [newPlantId, plants]);
 
   return (
     <div className="container px-4 py-6">
@@ -115,6 +138,10 @@ export default function PlantList({
           <div
             key={plant.slug}
             ref={plant.id === newPlantId ? lastCreatedPlantRef : null}
+            className={cn(
+              "transition-all duration-2000",
+              plant.id === newPlantId && shouldAnimate && "animate-highlight"
+            )}
           >
             <PlantCard
               {...plant}
