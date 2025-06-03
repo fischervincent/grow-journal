@@ -28,7 +28,7 @@ const PLANT_CREATION_ERRORS = {
   SpeciesTooLong: "SpeciesTooLong",
   UnknownError: "UnknownError",
 } as const;
-type PlantCreationError = typeof PLANT_CREATION_ERRORS[keyof typeof PLANT_CREATION_ERRORS];
+export type PlantCreationError = typeof PLANT_CREATION_ERRORS[keyof typeof PLANT_CREATION_ERRORS];
 
 const MAX_NAME_LENGTH = 100;
 export const NewPlantSchema = z.object({

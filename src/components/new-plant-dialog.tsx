@@ -23,7 +23,11 @@ import { createPlant } from "@/app/actions/plants/create-plant";
 import { useRouter } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
 
-export function NewPlantDialog() {
+interface NewPlantDialogProps {
+  onPlantCreated: (plantId: string) => void;
+}
+
+export function NewPlantDialog({ onPlantCreated }: NewPlantDialogProps) {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -36,7 +40,7 @@ export function NewPlantDialog() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const result = await createPlant({
+    const [createdPlant, errors] = await createPlant({
       name: formData.name,
       species: formData.isSpeciesName
         ? formData.name
@@ -44,7 +48,7 @@ export function NewPlantDialog() {
       location: formData.location || undefined,
     });
 
-    if (result.success) {
+    if (createdPlant) {
       setOpen(false);
       setFormData({
         name: "",
@@ -53,9 +57,9 @@ export function NewPlantDialog() {
         location: "",
       });
       router.refresh();
+      onPlantCreated(createdPlant.id);
     } else {
-      // TODO: Show error message
-      console.error("Failed to create plant:", result.errors);
+      console.error("Failed to create plant:", errors);
     }
   };
 

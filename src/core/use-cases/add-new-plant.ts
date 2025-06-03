@@ -1,5 +1,5 @@
 import { PlantRepository } from "../repositories/plant-repository";
-import { createNewPlant } from "../domain/plant";
+import { createNewPlant, PlantCreationError, PlantWithId } from "../domain/plant";
 
 interface AddNewPlantDto {
   name: string;
@@ -7,12 +7,14 @@ interface AddNewPlantDto {
   location: string | undefined;
 }
 
+type AddNewPlantResult = [PlantWithId, undefined] | [null, PlantCreationError[]];
+
 export const addNewPlantUseCase = (plantRepository: PlantRepository) => {
-  const addNewPlant = async (newPlantDto: AddNewPlantDto, userId: string) => {
+  const addNewPlant = async (newPlantDto: AddNewPlantDto, userId: string): Promise<AddNewPlantResult> => {
     const [plant, errors] = createNewPlant(newPlantDto);
     if (!plant) return [null, errors];
-    await plantRepository.create(plant, userId);
-    return plant;
+    const plantStored = await plantRepository.create(plant, userId);
+    return [plantStored, undefined];
   }
 
   return {

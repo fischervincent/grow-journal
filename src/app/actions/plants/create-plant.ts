@@ -19,22 +19,22 @@ export async function createPlant(input: CreatePlantInput) {
   })
   const userId = session?.user?.id;
   if (!userId) {
-    return { success: false, errors: ['Unauthorized'] };
+    return [null, 'Unauthorized'] as const // for now let's not handle errors in form
   }
 
   const [plant, errors] = createNewPlant(input);
 
   if (errors) {
-    return { success: false, errors };
+    return [null, errors] as const;
   }
 
   const plantRepository = getPlantRepository();
   const { addNewPlant } = addNewPlantUseCase(plantRepository);
-  const createdPlant = await addNewPlant({
+  const newPlantCreationResult = await addNewPlant({
     location: plant.location,
     name: plant.name,
     species: plant.species,
   }, userId);
 
-  return { success: true, data: createdPlant };
+  return newPlantCreationResult
 } 

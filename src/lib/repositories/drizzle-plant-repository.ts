@@ -20,10 +20,10 @@ export class DrizzlePlantRepository implements PlantRepository {
   constructor(private readonly db: NodePgDatabase) { }
 
   async create(plant: Plant, userId: string) {
-    await this.db.insert(plants)
+    const [createdPlant] = await this.db.insert(plants)
       .values({ ...plant, userId })
       .returning();
-    return plant;
+    return mapPlantFromDB(createdPlant);
   }
 
   async findById(id: string, userId: string) {

@@ -1,29 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { PlantWithId } from "@/core/domain/plant";
 import { PlantCard } from "./plant-card";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { NewPlantDialog } from "./new-plant-dialog";
-import { recordPlantEvent } from "@/app/actions/record-plant-event";
 import { PlantEventType } from "@/core/domain/plant-event-type";
 
 export default function PlantList({
-  plants: initialPlants,
+  plants,
   quickAccessEvents,
-  sortableEventTypes,
 }: {
   plants: PlantWithId[];
   quickAccessEvents: PlantEventType[];
-  sortableEventTypes: PlantEventType[];
 }) {
-  const [plants, setPlants] = useState(initialPlants);
   const [filter, setFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const lastCreatedPlantRef = useRef<HTMLDivElement>(null);
+  const [newPlantId, setNewPlantId] = useState<string | null>(null);
 
-  const getFilteredPlants = () => {
+  const getFilteredPlants = (plants: PlantWithId[]) => {
     let filtered = [...plants];
 
     // Apply search filter
@@ -43,44 +40,25 @@ export default function PlantList({
     } else if (filter === "outdoor") {
       filtered = filtered.filter((plant) => plant.location === "outdoor");
     }
-
     return filtered;
   };
 
-  const handleEventClick = async (
-    plantId: string,
-    eventId: string,
-    eventName: string
-  ) => {
-    try {
-      await recordPlantEvent(plantId, eventId, eventName);
-      // Update the local state to reflect the new event history
-      setPlants((prev) =>
-        prev.map((plant) =>
-          plant.id === plantId
-            ? {
-                ...plant,
-                lastDateByEvents: {
-                  ...plant.lastDateByEvents,
-                  [eventId]: {
-                    lastDate: new Date(),
-                    eventName,
-                  },
-                },
-              }
-            : plant
-        )
-      );
-    } catch (error) {
-      console.error("Failed to record event:", error);
-    }
+  const handlePlantCreated = (plantId: string) => {
+    setNewPlantId(plantId);
   };
+
+  useEffect(() => {
+    lastCreatedPlantRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  }, [plants]);
 
   return (
     <div className="container px-4 py-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-green-800">My Plants</h1>
-        <Button onClick={() => setIsDialogOpen(true)}>Add New Plant</Button>
+        <NewPlantDialog onPlantCreated={handlePlantCreated} />
       </div>
 
       <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
@@ -133,31 +111,20 @@ export default function PlantList({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {getFilteredPlants().map((plant) => (
-          <PlantCard
+        {getFilteredPlants(plants).map((plant) => (
+          <div
             key={plant.slug}
-            {...plant}
-            image="/placeholderPlant.svg"
-            quickAccessEvents={quickAccessEvents}
-            onEventClick={(eventId) =>
-              handleEventClick(
-                plant.id,
-                eventId,
-                quickAccessEvents.find((e) => e.id === eventId)?.name || ""
-              )
-            }
-          />
+            ref={plant.id === newPlantId ? lastCreatedPlantRef : null}
+          >
+            <PlantCard
+              {...plant}
+              image="/placeholderPlant.svg"
+              quickAccessEvents={quickAccessEvents}
+              onEventClick={() => {}}
+            />
+          </div>
         ))}
       </div>
-
-      <NewPlantDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        onPlantCreated={(newPlant: PlantWithId) => {
-          setPlants((prev) => [...prev, newPlant]);
-          setIsDialogOpen(false);
-        }}
-      />
     </div>
   );
 }
