@@ -33,14 +33,14 @@ export function PlantCard({
   onEventClick,
 }: PlantCardProps) {
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden pt-0 h-full">
       <Link href={`/plants/${slug}`}>
         <div className="relative aspect-square">
           <Image src={image} alt={name} fill className="object-cover" />
         </div>
       </Link>
 
-      <CardContent className="p-4">
+      <CardContent className="px-4 flex-1">
         <Link href={`/plants/${slug}`} className="hover:underline">
           <h3 className="font-semibold text-lg">{name}</h3>
         </Link>
@@ -53,7 +53,7 @@ export function PlantCard({
         )}
       </CardContent>
 
-      <CardFooter className="p-4 pt-0 flex gap-2 flex-wrap">
+      <CardFooter className="px-4 pt-0 flex gap-2 flex-wrap">
         {quickAccessEvents.map((event) => {
           const lastEvent = lastDateByEvents[event.id];
           return (
