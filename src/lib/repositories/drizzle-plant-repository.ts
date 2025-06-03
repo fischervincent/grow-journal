@@ -37,7 +37,8 @@ export class DrizzlePlantRepository implements PlantRepository {
   async findByUserId(userId: string) {
     const plantsInDB = await this.db.select()
       .from(plants)
-      .where(eq(plants.userId, userId));
+      .where(eq(plants.userId, userId))
+      .orderBy(plants.createdAt);
     return plantsInDB.map(mapPlantFromDB);
   }
 
@@ -49,12 +50,12 @@ export class DrizzlePlantRepository implements PlantRepository {
     return plant ? mapPlantFromDB(plant) : null;
   }
 
-  async update(id: string, plant: Partial<Plant>) {
+  async update(id: string, userId: string, plant: Partial<Plant>) {
     const [updatedPlant] = await this.db.update(plants)
       .set({ ...plant, updatedAt: new Date() })
-      .where(eq(plants.id, id))
+      .where(and(eq(plants.id, id), eq(plants.userId, userId)))
       .returning();
-    return updatedPlant;
+    return mapPlantFromDB(updatedPlant);
   }
 
   async delete(id: string) {

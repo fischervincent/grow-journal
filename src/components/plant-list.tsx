@@ -4,19 +4,23 @@ import { useState, useRef, useEffect } from "react";
 import { PlantWithId } from "@/core/domain/plant";
 import { PlantCard } from "./plant-card";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import { ArrowUpDown, Search } from "lucide-react";
 import { NewPlantDialog } from "./new-plant-dialog";
-import { PlantEventType } from "@/core/domain/plant-event-type";
+import { PlantEventTypeWithId } from "@/core/domain/plant-event-type";
 import { cn } from "@/lib/utils";
+import { recordPlantEvent } from "@/app/actions/record-plant-event";
 
 export default function PlantList({
   plants,
   quickAccessEvents,
+  sortableEventTypes,
 }: {
   plants: PlantWithId[];
-  quickAccessEvents: PlantEventType[];
+  quickAccessEvents: PlantEventTypeWithId[];
+  sortableEventTypes: PlantEventTypeWithId[];
 }) {
   const [filter, setFilter] = useState("all");
+  const [sortedBy, setSortedBy] = useState<PlantEventTypeWithId | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const lastCreatedPlantRef = useRef<HTMLDivElement>(null);
   const [newPlantId, setNewPlantId] = useState<string | null>(null);
@@ -42,7 +46,22 @@ export default function PlantList({
     } else if (filter === "outdoor") {
       filtered = filtered.filter((plant) => plant.location === "outdoor");
     }
-
+    if (sortedBy) {
+      filtered = filtered.sort((a, b) => {
+        const aDate = a.lastDateByEvents[sortedBy.id]?.lastDate;
+        const bDate = b.lastDateByEvents[sortedBy.id]?.lastDate;
+        if (aDate && bDate) {
+          return new Date(aDate).getTime() - new Date(bDate).getTime();
+        }
+        if (aDate) {
+          return 1;
+        }
+        if (bDate) {
+          return -1;
+        }
+        return 0;
+      });
+    }
     return filtered;
   };
 
@@ -77,6 +96,14 @@ export default function PlantList({
     }
   }, [newPlantId, plants]);
 
+  const toggleSortBy = (eventType: PlantEventTypeWithId) => {
+    if (sortedBy?.id === eventType.id) {
+      setSortedBy(null);
+    } else {
+      setSortedBy(eventType);
+    }
+  };
+
   return (
     <div className="container px-4 py-6">
       <div className="flex justify-between items-center mb-6">
@@ -97,39 +124,29 @@ export default function PlantList({
         </div>
 
         <div className="flex gap-2">
-          <Button
-            variant={filter === "all" ? "default" : "outline"}
-            className={
-              filter === "all"
-                ? "bg-green-600 hover:bg-green-700"
-                : "border-green-200 text-green-800"
-            }
-            onClick={() => setFilter("all")}
-          >
-            All
-          </Button>
-          <Button
-            variant={filter === "indoor" ? "default" : "outline"}
-            className={
-              filter === "indoor"
-                ? "bg-blue-600 hover:bg-blue-700"
-                : "border-blue-200 text-blue-800"
-            }
-            onClick={() => setFilter("indoor")}
-          >
-            Indoor
-          </Button>
-          <Button
-            variant={filter === "outdoor" ? "default" : "outline"}
-            className={
-              filter === "outdoor"
-                ? "bg-amber-600 hover:bg-amber-700"
-                : "border-amber-200 text-amber-800"
-            }
-            onClick={() => setFilter("outdoor")}
-          >
-            Outdoor
-          </Button>
+          {sortableEventTypes.map((eventType) => (
+            <Button
+              key={eventType.id}
+              variant={sortedBy?.id === eventType.id ? "default" : "outline"}
+              style={{
+                ...(sortedBy?.id === eventType.id
+                  ? {
+                      color: "white",
+                      backgroundColor: eventType.displayColor,
+                      borderColor: eventType.displayColor,
+                    }
+                  : {
+                      color: eventType.displayColor,
+                      borderColor: eventType.displayColor,
+                    }),
+              }}
+              className="border-1"
+              onClick={() => toggleSortBy(eventType)}
+            >
+              <ArrowUpDown className="w-4 h-4" />
+              {eventType.name}
+            </Button>
+          ))}
         </div>
       </div>
 
@@ -147,7 +164,11 @@ export default function PlantList({
               {...plant}
               image="/placeholderPlant.svg"
               quickAccessEvents={quickAccessEvents}
-              onEventClick={() => {}}
+              onEventClick={(plantEventType: PlantEventTypeWithId) => () => {
+                recordPlantEvent(plant.id, plantEventType.id, new Date());
+                console.log("plant", plant);
+                console.log("plantEventType", plantEventType);
+              }}
             />
           </div>
         ))}

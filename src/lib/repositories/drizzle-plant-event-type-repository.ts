@@ -18,6 +18,13 @@ const mapPlantEventTypeFromDB = (eventInDB: typeof plantEvents.$inferSelect): Pl
 export class DrizzlePlantEventTypeRepository implements PlantEventTypeRepository {
   constructor(private readonly db: NodePgDatabase) { }
 
+  async findById(id: string, userId: string) {
+    const eventInDB = await this.db.select()
+      .from(plantEvents)
+      .where(and(eq(plantEvents.id, id), eq(plantEvents.userId, userId)));
+    return mapPlantEventTypeFromDB(eventInDB[0]);
+  }
+
   async create(event: PlantEventType, userId: string) {
     const [createdEvent] = await this.db.insert(plantEvents)
       .values({ ...event, userId })

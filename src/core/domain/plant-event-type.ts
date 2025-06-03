@@ -13,7 +13,7 @@ export type PlantEventTypeWithId = PlantEventType & {
 
 export type LastDateByEventTypes = {
   [eventId: string]: {
-    lastDate: Date;
+    lastDate: string;
     eventName: string;
   };
 };

@@ -14,6 +14,7 @@ import { Check, Plus } from "lucide-react";
 import { useState } from "react";
 import { createPlantEventType } from "../../actions/plantEventTypes/create-plant-event-type";
 import { toast } from "sonner";
+import { updatePlantEventType } from "@/app/actions/plantEventTypes/update-plant-event-type";
 
 // Predefined color options
 const colorOptions = [
@@ -86,10 +87,11 @@ export const PlantEventTypeList = ({
   };
 
   // Handle updating an event type
-  const handleUpdateEventType = (
+  const handleUpdateEventType = async (
     id: string,
     updates: Partial<PlantEventTypeWithId>
   ) => {
+    await updatePlantEventType(id, updates);
     setEventTypes(
       eventTypes.map((eventType) =>
         eventType.id === id ? { ...eventType, ...updates } : eventType
