@@ -71,7 +71,7 @@ export function NewPlantDialog({ onPlantCreated }: NewPlantDialogProps) {
           <span className="hidden sm:inline">Add Plant</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="bg-white fixed sm:top-[20vh] top-4 translate-y-0 max-h-[90vh] overflow-y-auto">
+      <DialogContent className="fixed sm:top-[20vh] top-4 translate-y-0 max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-2">
           <DialogTitle>Add New Plant</DialogTitle>
         </DialogHeader>
