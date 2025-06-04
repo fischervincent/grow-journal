@@ -19,7 +19,6 @@ export default function PlantList({
   quickAccessEvents: PlantEventTypeWithId[];
   sortableEventTypes: PlantEventTypeWithId[];
 }) {
-  const [filter, setFilter] = useState("all");
   const [sortedBy, setSortedBy] = useState<PlantEventTypeWithId | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const lastCreatedPlantRef = useRef<HTMLDivElement>(null);
@@ -40,12 +39,6 @@ export default function PlantList({
       );
     }
 
-    // Apply category filter
-    if (filter === "indoor") {
-      filtered = filtered.filter((plant) => plant.location === "indoor");
-    } else if (filter === "outdoor") {
-      filtered = filtered.filter((plant) => plant.location === "outdoor");
-    }
     if (sortedBy) {
       filtered = filtered.sort((a, b) => {
         const aDate = a.lastDateByEvents[sortedBy.id]?.lastDate;
