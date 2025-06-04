@@ -22,9 +22,9 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 ## TODO
 - delete plant
+- can add/remove pictures of plant, with main picture (displayed for the plant in the PlantList and PlantDetails view)
 - dialog to confirm quick record event
 - in PlantDetails can see every events and we can filter them by plantEventType, or search by text from comment
-- can add/remove pictures of plant, with main picture (displayed for the plant in the PlantList and PlantDetails view)
 - when user is created, wizard to choose (and create ?) event types
 - event types form - add a way to create event types that are suggested, like a dropdown or a list where you can select from
 - form error handling
