@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { PlantWithId } from "@/core/domain/plant";
 import { PlantCard } from "./plant-card";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, Search } from "lucide-react";
+import { ArrowUpDown, Search, X } from "lucide-react";
 import { NewPlantDialog } from "./new-plant-dialog";
 import { PlantEventTypeWithId } from "@/core/domain/plant-event-type";
 import { cn } from "@/lib/utils";
 import { recordPlantEvent } from "@/app/actions/record-plant-event";
+import { useSearchParams } from "next/navigation";
+import debounce from "lodash/debounce";
 
 export default function PlantList({
   plants,
@@ -19,18 +21,75 @@ export default function PlantList({
   quickAccessEvents: PlantEventTypeWithId[];
   sortableEventTypes: PlantEventTypeWithId[];
 }) {
-  const [sortedBy, setSortedBy] = useState<PlantEventTypeWithId | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const searchParams = useSearchParams();
   const lastCreatedPlantRef = useRef<HTMLDivElement>(null);
   const [newPlantId, setNewPlantId] = useState<string | null>(null);
   const [shouldAnimate, setShouldAnimate] = useState(false);
 
-  const getFilteredPlants = (plants: PlantWithId[]) => {
+  // Initialize state from URL params
+  const [searchTerm, setSearchTerm] = useState(
+    searchParams?.get("search") ?? ""
+  );
+  const initialSortById = searchParams?.get("sortBy") ?? null;
+  const [activeSortType, setActiveSortType] =
+    useState<PlantEventTypeWithId | null>(
+      sortableEventTypes.find((type) => type.id === initialSortById) || null
+    );
+
+  // Debounced URL update without redirect
+  const updateUrl = useMemo(
+    () =>
+      debounce((search: string | null, sortBy: string | null) => {
+        const params = new URLSearchParams(window.location.search);
+        if (search) {
+          params.set("search", search);
+        } else {
+          params.delete("search");
+        }
+        if (sortBy) {
+          params.set("sortBy", sortBy);
+        } else {
+          params.delete("sortBy");
+        }
+
+        const queryString = params.toString();
+        const newUrl = queryString
+          ? `?${queryString}`
+          : window.location.pathname;
+        window.history.replaceState(null, "", newUrl);
+      }, 300),
+    []
+  );
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    updateUrl(value || null, activeSortType?.id ?? null);
+  };
+
+  const clearSearch = () => {
+    setSearchTerm("");
+    updateUrl(null, activeSortType?.id ?? null);
+  };
+
+  const handleSortChange = (eventType: PlantEventTypeWithId) => {
+    const newSortType = activeSortType?.id === eventType.id ? null : eventType;
+    setActiveSortType(newSortType);
+    updateUrl(searchTerm || null, newSortType?.id ?? null);
+  };
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      updateUrl.cancel();
+    };
+  }, [updateUrl]);
+
+  const filteredAndSortedPlants = useMemo(() => {
     let filtered = [...plants];
 
     // Apply search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+    if (searchTerm) {
+      const query = searchTerm.toLowerCase();
       filtered = filtered.filter(
         (plant) =>
           plant.name.toLowerCase().includes(query) ||
@@ -39,10 +98,10 @@ export default function PlantList({
       );
     }
 
-    if (sortedBy) {
+    if (activeSortType) {
       filtered = filtered.sort((a, b) => {
-        const aDate = a.lastDateByEvents[sortedBy.id]?.lastDate;
-        const bDate = b.lastDateByEvents[sortedBy.id]?.lastDate;
+        const aDate = a.lastDateByEvents[activeSortType.id]?.lastDate;
+        const bDate = b.lastDateByEvents[activeSortType.id]?.lastDate;
         if (aDate && bDate) {
           return new Date(aDate).getTime() - new Date(bDate).getTime();
         }
@@ -56,7 +115,7 @@ export default function PlantList({
       });
     }
     return filtered;
-  };
+  }, [plants, searchTerm, activeSortType]);
 
   const handlePlantCreated = (plantId: string) => {
     setNewPlantId(plantId);
@@ -87,15 +146,7 @@ export default function PlantList({
         clearTimeout(cleanupTimeout);
       };
     }
-  }, [newPlantId, plants]);
-
-  const toggleSortBy = (eventType: PlantEventTypeWithId) => {
-    if (sortedBy?.id === eventType.id) {
-      setSortedBy(null);
-    } else {
-      setSortedBy(eventType);
-    }
-  };
+  }, [newPlantId]);
 
   return (
     <div className="container px-4 py-6">
@@ -110,19 +161,29 @@ export default function PlantList({
           <input
             type="text"
             placeholder="Search plants..."
-            className="pl-10 pr-4 py-2 w-full border rounded-lg"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 pr-10 py-2 w-full border rounded-lg"
+            value={searchTerm}
+            onChange={(e) => handleSearchChange(e.target.value)}
           />
+          {searchTerm && (
+            <button
+              onClick={clearSearch}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         <div className="flex gap-2">
           {sortableEventTypes.map((eventType) => (
             <Button
               key={eventType.id}
-              variant={sortedBy?.id === eventType.id ? "default" : "outline"}
+              variant={
+                activeSortType?.id === eventType.id ? "default" : "outline"
+              }
               style={{
-                ...(sortedBy?.id === eventType.id
+                ...(activeSortType?.id === eventType.id
                   ? {
                       color: "white",
                       backgroundColor: eventType.displayColor,
@@ -134,17 +195,27 @@ export default function PlantList({
                     }),
               }}
               className="border-1"
-              onClick={() => toggleSortBy(eventType)}
+              onClick={() => handleSortChange(eventType)}
             >
-              <ArrowUpDown className="w-4 h-4" />
+              <ArrowUpDown className="h-4 w-4 mr-2" />
               {eventType.name}
+              {activeSortType?.id === eventType.id && (
+                <X
+                  className="h-4 w-4 ml-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveSortType(null);
+                    updateUrl(searchTerm || null, null);
+                  }}
+                />
+              )}
             </Button>
           ))}
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {getFilteredPlants(plants).map((plant) => (
+        {filteredAndSortedPlants.map((plant) => (
           <div
             key={plant.slug}
             ref={plant.id === newPlantId ? lastCreatedPlantRef : null}

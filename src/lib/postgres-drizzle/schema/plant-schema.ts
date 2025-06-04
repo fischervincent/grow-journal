@@ -1,5 +1,6 @@
 import { pgTable, text, timestamp, uuid, uniqueIndex, index, jsonb } from "drizzle-orm/pg-core";
 import { users } from "./auth-schema";
+import { sql } from "drizzle-orm";
 
 export const plants = pgTable("plants", {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -10,10 +11,14 @@ export const plants = pgTable("plants", {
   location: text('location'),
   lastDateByEvents: jsonb('last_date_by_events').default({}).notNull(),
   createdAt: timestamp('created_at').$defaultFn(() => new Date()).notNull(),
-  updatedAt: timestamp('updated_at').$defaultFn(() => new Date()).notNull()
+  updatedAt: timestamp('updated_at').$defaultFn(() => new Date()).notNull(),
+  deletedAt: timestamp('deleted_at'),
 }, (table) => {
   return {
     slugUserIdx: uniqueIndex('plants_slug_user_id_idx').on(table.slug, table.userId),
     userIdIdx: index('plants_user_id_idx').on(table.userId),
+    activeUserIdIdx: index('plants_active_user_id_idx')
+      .on(table.userId)
+      .where(sql`${table.deletedAt} IS NULL`),
   }
 });

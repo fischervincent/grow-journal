@@ -12,7 +12,7 @@ function PlantListLoading() {
   );
 }
 
-export default async function PlantListContainer() {
+async function PlantListContent() {
   const { data: plants } = await findPlantsByUser();
   const quickAccessEvents = await getQuickAccessEventTypes();
   const sortableEvents = await getSortableEventTypesByUser();
@@ -22,12 +22,18 @@ export default async function PlantListContainer() {
   }
 
   return (
+    <PlantList
+      plants={plants}
+      quickAccessEvents={quickAccessEvents}
+      sortableEventTypes={sortableEvents}
+    />
+  );
+}
+
+export default function PlantListContainer() {
+  return (
     <Suspense fallback={<PlantListLoading />}>
-      <PlantList
-        plants={plants}
-        quickAccessEvents={quickAccessEvents}
-        sortableEventTypes={sortableEvents}
-      />
+      <PlantListContent />
     </Suspense>
   );
 }

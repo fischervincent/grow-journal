@@ -19,6 +19,7 @@ export type Plant = {
 
 export type PlantWithId = Plant & {
   id: string;
+  deletedAt?: Date;
 }
 
 const PLANT_CREATION_ERRORS = {

@@ -71,6 +71,13 @@
       "when": 1748983833675,
       "tag": "0009_mute_crusher_hogan",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1749027618750,
+      "tag": "0010_glamorous_diamondback",
+      "breakpoints": true
     }
   ]
 }

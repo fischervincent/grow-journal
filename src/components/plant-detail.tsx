@@ -12,7 +12,7 @@ import { Droplet, Flower, MapPin, ArrowLeft, Check } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { DeletePlantButton } from "@/components/delete-plant-button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type PlantDetailProps = {
   plant: PlantWithId;
@@ -21,6 +21,17 @@ type PlantDetailProps = {
 export function PlantDetail({ plant }: PlantDetailProps) {
   const router = useRouter();
   const [isDeleted, setIsDeleted] = useState(false);
+
+  // Check if plant is already deleted
+  useEffect(() => {
+    if (plant.deletedAt) {
+      setIsDeleted(true);
+      const timer = setTimeout(() => {
+        router.back();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [plant.deletedAt, router]);
 
   const handleBack = () => {
     router.back();
@@ -38,9 +49,8 @@ export function PlantDetail({ plant }: PlantDetailProps) {
 
   const handleDeleteSuccess = () => {
     setIsDeleted(true);
-    setTimeout(() => {
-      router.push("/plants");
-    }, 1500);
+    // there is a redirecting (back) in the useEffect that will happend
+    // since the delete action will trigger a revalidation of this page and the plant has been deleted
   };
 
   if (isDeleted) {
