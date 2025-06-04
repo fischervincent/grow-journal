@@ -8,7 +8,7 @@ export interface PlantEventTypeRepository {
   findSortableEventTypesByUserId(userId: string): Promise<PlantEventTypeWithId[]>;
   findByUserId(userId: string): Promise<PlantEventTypeWithId[]>;
   update(id: string, event: Partial<PlantEventType>): Promise<PlantEventTypeWithId>;
-  delete(id: string): Promise<void>;
+  delete(id: string, userId: string): Promise<void>;
 }
 
 export interface PlantEventRepository {

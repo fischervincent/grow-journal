@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { plants } from "../postgres-drizzle/schema/plant-schema";
 import type { PlantRepository } from "../../core/repositories/plant-repository";
@@ -85,5 +85,13 @@ export class DrizzlePlantRepository implements PlantRepository {
       ))
       .returning();
     return mapPlantFromDB(deletedPlant);
+  }
+
+  async removeEventType(userId: string, eventTypeId: string) {
+    await this.db.update(plants)
+      .set({
+        lastDateByEvents: sql`${plants.lastDateByEvents} - ${eventTypeId}`
+      })
+      .where(eq(plants.userId, userId));
   }
 }

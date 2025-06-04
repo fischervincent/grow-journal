@@ -7,4 +7,5 @@ export interface PlantRepository {
   findBySlugAndUserId(slug: string, userId: string): Promise<PlantWithId | null>;
   update(id: string, userId: string, plant: Partial<Plant>): Promise<PlantWithId>;
   delete(id: string, userId: string): Promise<PlantWithId>;
+  removeEventType(userId: string, eventTypeId: string): Promise<void>;
 } 

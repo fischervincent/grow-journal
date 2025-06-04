@@ -10,11 +10,12 @@ import {
   PlantEventType,
   PlantEventTypeWithId,
 } from "@/core/domain/plant-event-type";
-import { Check, Plus } from "lucide-react";
+import { Check, Plus, X } from "lucide-react";
 import { useState } from "react";
 import { createPlantEventType } from "../../actions/plantEventTypes/create-plant-event-type";
 import { toast } from "sonner";
 import { updatePlantEventType } from "@/app/actions/plantEventTypes/update-plant-event-type";
+import { deletePlantEventType } from "@/app/actions/plantEventTypes/delete-plant-event-type";
 
 // Predefined color options
 const colorOptions = [
@@ -45,11 +46,57 @@ interface PlantEventTypeListProps {
   fetchedEventTypes: PlantEventTypeWithId[];
 }
 
+interface DeletedEventFeedbackProps {
+  eventName: string;
+  onClose: () => void;
+}
+
+function DeletedEventFeedback({
+  eventName,
+  onClose,
+}: DeletedEventFeedbackProps) {
+  return (
+    <Card className="overflow-hidden">
+      <CardContent className="p-0">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center">
+            <div className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center mr-3">
+              <Check className="h-4 w-4 text-green-600 animate-[appear_0.3s_ease-out]" />
+            </div>
+            <p>
+              <span className="font-medium">{eventName}</span> has been deleted
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="h-8 w-8 hover:bg-gray-100"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+type ListItem =
+  | { type: "event"; data: PlantEventTypeWithId; position: number }
+  | {
+      type: "deleted";
+      data: { id: string; name: string; position: number };
+      position: number;
+    };
+
 export const PlantEventTypeList = ({
   fetchedEventTypes,
 }: PlantEventTypeListProps) => {
   const [eventTypes, setEventTypes] =
     useState<PlantEventTypeWithId[]>(fetchedEventTypes);
+  const [deletedEvents, setDeletedEvents] = useState<
+    { id: string; name: string; position: number }[]
+  >([]);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [newEventType, setNewEventType] = useState<
     Omit<PlantEventTypeWithId, "id">
@@ -100,8 +147,107 @@ export const PlantEventTypeList = ({
   };
 
   // Handle deleting an event type
-  const handleDeleteEventType = (id: string) => {
-    setEventTypes(eventTypes.filter((eventType) => eventType.id !== id));
+  const handleDeleteEventType = async (
+    eventTypeToDelete: PlantEventTypeWithId
+  ) => {
+    const position = eventTypes.findIndex(
+      (et) => et.id === eventTypeToDelete.id
+    );
+    await deletePlantEventType(eventTypeToDelete);
+    setEventTypes(
+      eventTypes.filter((eventType) => eventType.id !== eventTypeToDelete.id)
+    );
+    setDeletedEvents([
+      ...deletedEvents,
+      { id: eventTypeToDelete.id, name: eventTypeToDelete.name, position },
+    ]);
+  };
+
+  const handleRemoveDeleteFeedback = (id: string) => {
+    setDeletedEvents(deletedEvents.filter((event) => event.id !== id));
+  };
+
+  // Combine event types and deletion feedback in correct order
+  const renderEventsList = () => {
+    const allItems: ListItem[] = eventTypes.map((et, index) => ({
+      type: "event" as const,
+      data: et,
+      position: index,
+    }));
+
+    deletedEvents.forEach((de) => {
+      allItems.splice(de.position, 0, {
+        type: "deleted" as const,
+        data: de,
+        position: de.position,
+      });
+    });
+
+    return allItems.map((item) => {
+      if (item.type === "deleted") {
+        return (
+          <DeletedEventFeedback
+            key={`deleted-${item.data.id}`}
+            eventName={item.data.name}
+            onClose={() => handleRemoveDeleteFeedback(item.data.id)}
+          />
+        );
+      }
+
+      const eventType = item.data;
+      return (
+        <Card key={eventType.id} className="overflow-hidden">
+          <CardContent className="p-0">
+            {editingId === eventType.id ? (
+              <EventTypeForm
+                eventType={eventType}
+                onSave={(updates) => {
+                  handleUpdateEventType(eventType.id, updates);
+                  setEditingId(null);
+                }}
+                onCancel={() => setEditingId(null)}
+              />
+            ) : (
+              <div className="flex items-center p-4">
+                <div
+                  className="w-6 h-6 rounded-full mr-3 flex-shrink-0"
+                  style={{ backgroundColor: eventType.displayColor }}
+                />
+                <div className="flex-grow">
+                  <h3 className="font-medium">{eventType.name}</h3>
+                  <div className="flex gap-4 text-xs text-muted-foreground mt-1">
+                    {eventType.isSortableByDate && (
+                      <span>Sort plants by last event</span>
+                    )}
+                    {eventType.hasQuickAccessButton && (
+                      <span>Quick access</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEditingId(eventType.id)}
+                    className="text-muted-foreground"
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteEventType(eventType)}
+                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      );
+    });
   };
 
   return (
@@ -114,61 +260,8 @@ export const PlantEventTypeList = ({
               Customize the types of events you want to track for your plants.
             </p>
 
-            {/* List of event types */}
-            <div className="space-y-3 mb-6">
-              {eventTypes.map((eventType) => (
-                <Card key={eventType.id} className="overflow-hidden">
-                  <CardContent className="p-0">
-                    {editingId === eventType.id ? (
-                      <EventTypeForm
-                        eventType={eventType}
-                        onSave={(updates) => {
-                          handleUpdateEventType(eventType.id, updates);
-                          setEditingId(null);
-                        }}
-                        onCancel={() => setEditingId(null)}
-                      />
-                    ) : (
-                      <div className="flex items-center p-4">
-                        <div
-                          className="w-6 h-6 rounded-full mr-3 flex-shrink-0"
-                          style={{ backgroundColor: eventType.displayColor }}
-                        />
-                        <div className="flex-grow">
-                          <h3 className="font-medium">{eventType.name}</h3>
-                          <div className="flex gap-4 text-xs text-muted-foreground mt-1">
-                            {eventType.isSortableByDate && (
-                              <span>Sort plants by last event</span>
-                            )}
-                            {eventType.hasQuickAccessButton && (
-                              <span>Quick access</span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setEditingId(eventType.id)}
-                            className="text-muted-foreground"
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteEventType(eventType.id)}
-                            className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {/* List of event types and deletion feedback */}
+            <div className="space-y-3 mb-6">{renderEventsList()}</div>
 
             {/* Add new event type */}
             {isAddingNew ? (
@@ -227,7 +320,7 @@ export const PlantEventTypeList = ({
                           Sort plants by last event
                         </Label>
                         <p className="text-xs text-muted-foreground">
-                          Easily find plants that haven’t had an event in a
+                          Easily find plants that haven&apos;t had an event in a
                           while
                         </p>
                       </div>
@@ -250,7 +343,7 @@ export const PlantEventTypeList = ({
                         </Label>
                         <p className="text-xs text-muted-foreground">
                           Add a shortcut for quick event registration, useful
-                          for frequently logged events, like "watered"
+                          for frequently logged events, like &quot;watered&quot;
                         </p>
                       </div>
                       <Switch

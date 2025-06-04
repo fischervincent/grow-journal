@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { signOut, useSession } from "@/lib/auth-client";
+import { getInitials } from "@/lib/utils";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function AccountPage() {
   const user = session?.user;
   const userName = user?.name;
   const userEmail = user?.email;
+  const initials = getInitials(userName);
 
   return (
     <div className="flex-1 bg-white">
@@ -35,7 +37,7 @@ export default function AccountPage() {
           <div className="flex items-center gap-4 mb-8">
             <Avatar className="h-20 w-20">
               <AvatarImage src="/placeholder.svg?height=80&width=80" />
-              <AvatarFallback className="text-xl">JD</AvatarFallback>
+              <AvatarFallback className="text-xl">{initials}</AvatarFallback>
             </Avatar>
             <div>
               <h2 className="text-xl font-semibold">{userName}</h2>

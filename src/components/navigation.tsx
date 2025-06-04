@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { signOut, useSession } from "@/lib/auth-client";
+import { getInitials } from "@/lib/utils";
 
 export function Navigation() {
   const pathname = usePathname();
@@ -31,6 +32,7 @@ export function Navigation() {
   const { data: session } = useSession();
   const user = session?.user;
   const userName = user?.name;
+  const initials = getInitials(userName);
 
   return (
     <>
@@ -63,7 +65,7 @@ export function Navigation() {
             <Button variant="ghost" className="flex items-center gap-2 h-10">
               <Avatar className="h-8 w-8">
                 <AvatarImage src="/placeholderPlant.svg?height=32&width=32" />
-                <AvatarFallback>JD</AvatarFallback>
+                <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
               <span className="text-sm font-medium">{userName}</span>
               <ChevronDown className="h-4 w-4" />
