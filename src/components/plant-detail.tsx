@@ -8,9 +8,11 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
-import { Droplet, Flower, MapPin, ArrowLeft } from "lucide-react";
+import { Droplet, Flower, MapPin, ArrowLeft, Check } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { DeletePlantButton } from "@/components/delete-plant-button";
+import { useState } from "react";
 
 type PlantDetailProps = {
   plant: PlantWithId;
@@ -18,6 +20,7 @@ type PlantDetailProps = {
 
 export function PlantDetail({ plant }: PlantDetailProps) {
   const router = useRouter();
+  const [isDeleted, setIsDeleted] = useState(false);
 
   const handleBack = () => {
     router.back();
@@ -33,11 +36,36 @@ export function PlantDetail({ plant }: PlantDetailProps) {
     console.log("Fertilize plant:", plant.slug);
   };
 
+  const handleDeleteSuccess = () => {
+    setIsDeleted(true);
+    setTimeout(() => {
+      router.push("/plants");
+    }, 1500);
+  };
+
+  if (isDeleted) {
+    return (
+      <div className="container max-w-2xl px-4 py-6">
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
+              <Check className="h-6 w-6 text-green-600" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Plant Deleted Successfully
+            </h2>
+            <p className="text-gray-500">Redirecting to your plants...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container max-w-2xl px-4 py-6">
       <div className="mb-6">
         <Button
-          className="inline-flex items-center text-sm text-gray-500 hover:text-gray-800  "
+          className="inline-flex items-center text-sm text-gray-500 hover:text-gray-800"
           variant="ghost"
           onClick={handleBack}
         >
@@ -109,6 +137,14 @@ export function PlantDetail({ plant }: PlantDetailProps) {
           </Button>
         </CardFooter>
       </Card>
+
+      <div className="mt-6 flex justify-end">
+        <DeletePlantButton
+          plantId={plant.id}
+          plantName={plant.name}
+          onDeleteSuccess={handleDeleteSuccess}
+        />
+      </div>
     </div>
   );
 }

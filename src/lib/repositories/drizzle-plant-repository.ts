@@ -58,8 +58,8 @@ export class DrizzlePlantRepository implements PlantRepository {
     return mapPlantFromDB(updatedPlant);
   }
 
-  async delete(id: string) {
+  async delete(id: string, userId: string) {
     await this.db.delete(plants)
-      .where(eq(plants.id, id));
+      .where(and(eq(plants.id, id), eq(plants.userId, userId)));
   }
 }
