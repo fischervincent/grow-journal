@@ -9,8 +9,8 @@ import { NewPlantDialog } from "./new-plant-dialog";
 import { PlantEventTypeWithId } from "@/core/domain/plant-event-type";
 import { cn } from "@/lib/utils";
 import { recordPlantEvent } from "@/app/actions/record-plant-event";
-import { useSearchParams } from "next/navigation";
 import debounce from "lodash/debounce";
+import { useSearchParams } from "next/navigation";
 
 export default function PlantList({
   plants,
@@ -22,15 +22,39 @@ export default function PlantList({
   sortableEventTypes: PlantEventTypeWithId[];
 }) {
   const searchParams = useSearchParams();
+  const searchParamValue = searchParams?.get("search") ?? null;
+  const orderByParamValue = searchParams?.get("sortBy") ?? null;
+  return (
+    <PlantListContent
+      plants={plants}
+      quickAccessEvents={quickAccessEvents}
+      sortableEventTypes={sortableEventTypes}
+      searchParamValue={searchParamValue}
+      orderByParamValue={orderByParamValue}
+    />
+  );
+}
+
+function PlantListContent({
+  plants,
+  quickAccessEvents,
+  sortableEventTypes,
+  searchParamValue,
+  orderByParamValue,
+}: {
+  plants: PlantWithId[];
+  quickAccessEvents: PlantEventTypeWithId[];
+  sortableEventTypes: PlantEventTypeWithId[];
+  searchParamValue: string | null;
+  orderByParamValue: string | null;
+}) {
   const lastCreatedPlantRef = useRef<HTMLDivElement>(null);
   const [newPlantId, setNewPlantId] = useState<string | null>(null);
   const [shouldAnimate, setShouldAnimate] = useState(false);
 
   // Initialize state from URL params
-  const [searchTerm, setSearchTerm] = useState(
-    searchParams?.get("search") ?? ""
-  );
-  const initialSortById = searchParams?.get("sortBy") ?? null;
+  const [searchTerm, setSearchTerm] = useState(searchParamValue);
+  const initialSortById = orderByParamValue;
   const [activeSortType, setActiveSortType] =
     useState<PlantEventTypeWithId | null>(
       sortableEventTypes.find((type) => type.id === initialSortById) || null
@@ -162,7 +186,7 @@ export default function PlantList({
             type="text"
             placeholder="Search plants..."
             className="pl-10 pr-10 py-2 w-full border rounded-lg"
-            value={searchTerm}
+            value={searchTerm ?? ""}
             onChange={(e) => handleSearchChange(e.target.value)}
           />
           {searchTerm && (
