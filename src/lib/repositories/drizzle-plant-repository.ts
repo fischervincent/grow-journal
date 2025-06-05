@@ -1,5 +1,5 @@
 import { and, eq, isNull, sql } from "drizzle-orm";
-import type { NodePgDatabase } from "drizzle-orm/node-postgres";
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { plants } from "../postgres-drizzle/schema/plant-schema";
 import type { PlantRepository } from "../../core/repositories/plant-repository";
 import { Plant, PlantWithId } from "@/core/domain/plant";
@@ -18,7 +18,7 @@ const mapPlantFromDB = (plantInDB: typeof plants.$inferSelect): PlantWithId => {
 };
 
 export class DrizzlePlantRepository implements PlantRepository {
-  constructor(private readonly db: NodePgDatabase) { }
+  constructor(private readonly db: PostgresJsDatabase) { }
 
   async create(plant: Plant, userId: string) {
     const [createdPlant] = await this.db.insert(plants)

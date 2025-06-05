@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import type { NodePgDatabase } from "drizzle-orm/node-postgres";
+import { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { plantEvents } from "../postgres-drizzle/schema/plant-event-type-schema";
 import type { PlantEventTypeRepository } from "../../core/repositories/plant-event-repository";
 import { PlantEventType, PlantEventTypeWithId } from "@/core/domain/plant-event-type";
@@ -16,7 +16,7 @@ const mapPlantEventTypeFromDB = (eventInDB: typeof plantEvents.$inferSelect): Pl
 };
 
 export class DrizzlePlantEventTypeRepository implements PlantEventTypeRepository {
-  constructor(private readonly db: NodePgDatabase) { }
+  constructor(private readonly db: PostgresJsDatabase) { }
 
   async findById(id: string, userId: string) {
     const eventInDB = await this.db.select()
