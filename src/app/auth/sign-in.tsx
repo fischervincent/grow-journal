@@ -92,11 +92,11 @@ export default function SignIn() {
                     password,
                   },
                   {
-                    onRequest: (ctx) => {
+                    onRequest: () => {
                       setIsError(false);
                       setLoading(true);
                     },
-                    onResponse: (ctx) => {
+                    onResponse: () => {
                       setLoading(false);
                     },
                     onError: (ctx) => {
@@ -131,11 +131,11 @@ export default function SignIn() {
                       callbackURL,
                     },
                     {
-                      onRequest: (ctx) => {
+                      onRequest: () => {
                         setIsError(false);
                         setLoading(true);
                       },
-                      onResponse: (ctx) => {
+                      onResponse: () => {
                         setLoading(false);
                       },
                       onError: (ctx) => {

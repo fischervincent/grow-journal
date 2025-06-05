@@ -3,9 +3,9 @@ import { PlantDetail } from "@/components/plant-detail";
 import { notFound } from "next/navigation";
 
 interface PlantPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export default async function PlantPage({ params }: PlantPageProps) {

@@ -7,11 +7,14 @@ import Link from "next/link";
 import { ArrowRight, Droplet, Flower, Bell } from "lucide-react";
 import LandingHeader from "@/components/landing-header";
 import LandingFooter from "@/components/landing-footer";
+import { Suspense } from "react";
 
 export default function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col">
-      <LandingHeader />
+      <Suspense>
+        <LandingHeader />
+      </Suspense>
 
       {/* Hero Section */}
       <section className="relative bg-gradient-to-b from-green-50 to-white py-20">

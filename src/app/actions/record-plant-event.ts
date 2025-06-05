@@ -27,7 +27,7 @@ export async function recordPlantEvent(plantId: string, eventId: string, eventDa
   const lastDateByEvents = {
     ...plant.lastDateByEvents,
     [eventId]: {
-      lastDate: eventDateTime,
+      lastDate: eventDateTime.toISOString(),
       eventName: eventType.name,
     },
   };

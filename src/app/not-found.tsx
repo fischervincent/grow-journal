@@ -21,8 +21,8 @@ export default function NotFound() {
           Oops! This plant got lost
         </h1>
         <p className="text-muted-foreground mb-8 text-lg">
-          The page you're looking for seems to have wandered off into the
-          garden. Let's get you back to your plants!
+          The page you&apos;re looking for seems to have wandered off into the
+          garden. Let&apos;s get you back to your plants!
         </p>
 
         <div className="space-y-3">

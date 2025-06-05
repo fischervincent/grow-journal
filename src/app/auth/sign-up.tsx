@@ -107,7 +107,6 @@ export default function SignUp() {
                 email,
                 password,
                 name: `${firstName} ${lastName}`,
-                image: image ? await convertImageToBase64(image) : "",
                 callbackURL,
                 fetchOptions: {
                   onResponse: () => {
@@ -133,11 +132,11 @@ export default function SignUp() {
             )}
           </Button>
 
-					<div className="relative flex items-center">
-						<div className="flex-grow border-t border-gray-300"></div>
-						<span className="mx-4 text-gray-500">or</span>
-						<div className="flex-grow border-t border-gray-300"></div>
-					</div>
+          <div className="relative flex items-center">
+            <div className="flex-grow border-t border-gray-300"></div>
+            <span className="mx-4 text-gray-500">or</span>
+            <div className="flex-grow border-t border-gray-300"></div>
+          </div>
 
           <div className="w-full gap-2 flex items-center justify-between flex-col">
             <Button
@@ -151,10 +150,10 @@ export default function SignUp() {
                     callbackURL,
                   },
                   {
-                    onRequest: (ctx) => {
+                    onRequest: () => {
                       setLoading(true);
                     },
-                    onResponse: (ctx) => {
+                    onResponse: () => {
                       setLoading(false);
                     },
                   }
@@ -191,13 +190,4 @@ export default function SignUp() {
       </CardContent>
     </Card>
   );
-}
-
-async function convertImageToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
 }
