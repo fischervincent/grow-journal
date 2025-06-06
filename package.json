@@ -24,6 +24,7 @@
     "better-auth": "^1.2.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "drizzle-orm": "^0.44.1",
     "lodash": "^4.17.21",

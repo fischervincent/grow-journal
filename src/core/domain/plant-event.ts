@@ -7,6 +7,4 @@ export interface PlantEvent {
 
 export interface PlantEventWithId extends PlantEvent {
   id: string;
-  createdAt: Date;
-  updatedAt: Date;
 } 

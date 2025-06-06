@@ -15,6 +15,7 @@ import { uploadPlantPhoto } from "@/app/actions/plants/upload-plant-photo";
 import { getPlantPhotos } from "@/app/actions/plants/get-plant-photos";
 import { setMainPhoto } from "@/app/actions/plants/set-main-photo";
 import { toast } from "sonner";
+import { PlantCareHistoryContainer } from "./plant-care-history-container";
 
 type PlantDetailProps = {
   plant: PlantWithPhotoAndId;
@@ -59,8 +60,6 @@ export function PlantDetail({ plant }: PlantDetailProps) {
 
   const handleDeleteSuccess = () => {
     setIsDeleted(true);
-    // there is a redirecting (back) in the useEffect that will happend
-    // since the delete action will trigger a revalidation of this page and the plant has been deleted
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -254,14 +253,7 @@ export function PlantDetail({ plant }: PlantDetailProps) {
           </TabsContent>
 
           <TabsContent value="care" className="mt-4">
-            <Card>
-              <CardHeader>
-                <h2 className="text-xl font-semibold">Care History</h2>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-500">No care history yet.</p>
-              </CardContent>
-            </Card>
+            <PlantCareHistoryContainer plantId={plant.id} />
           </TabsContent>
 
           <TabsContent value="notes" className="mt-4">
