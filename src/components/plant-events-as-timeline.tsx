@@ -80,6 +80,11 @@ export function PlantEventsAsTimeline({
   const [plantEvents, setPlantEvents] = useState<PlantEventWithId[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
 
+  const selectedEventTypeName = useMemo(() => {
+    if (selectedEventType === ALL_EVENTS) return null;
+    return eventTypes.find((type) => type.id === selectedEventType)?.name;
+  }, [selectedEventType, eventTypes]);
+
   useEffect(() => {
     const loadEvents = async () => {
       setIsLoadingEvents(true);
@@ -155,8 +160,8 @@ export function PlantEventsAsTimeline({
           <circle
             key={event.id}
             cx={cx}
-            cy={cy - index * 8} // Stack events upward from the line
-            r={4}
+            cy={cy - index * 12} // Increased spacing between stacked events
+            r={5}
             fill={event.color}
             stroke="white"
             strokeWidth={2}
@@ -172,24 +177,26 @@ export function PlantEventsAsTimeline({
       if (!events || events.length === 0) return null;
 
       return (
-        <div className="bg-white p-3 border rounded-lg shadow-lg">
-          <p className="font-medium mb-2">
+        <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-100">
+          <p className="text-lg font-semibold mb-2">
             {format(events[0].datetime, "MMMM d, yyyy")}
           </p>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {events.map((event: TimelineEvent) => (
-              <div key={event.id} className="flex items-start gap-2">
+              <div key={event.id} className="flex items-start gap-3">
                 <div
-                  className="w-3 h-3 rounded-full mt-1 flex-shrink-0"
+                  className="w-3 h-3 rounded-full mt-1.5 flex-shrink-0"
                   style={{ backgroundColor: event.color }}
                 />
                 <div>
-                  <p className="font-medium">{event.type}</p>
+                  <p className="font-medium text-base">{event.type}</p>
                   <p className="text-sm text-gray-600">
-                    {format(new Date(event.datetime), "p")}
+                    {format(new Date(event.datetime), "h:mm a")}
                   </p>
                   {event.comment && (
-                    <p className="text-sm text-gray-600">{event.comment}</p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {event.comment}
+                    </p>
                   )}
                 </div>
               </div>
@@ -201,8 +208,22 @@ export function PlantEventsAsTimeline({
     return null;
   };
 
+  const getEmptyStateMessage = () => {
+    const timeRange = TIME_RANGES[selectedTimeRange];
+    const period =
+      timeRange === 1
+        ? "month"
+        : timeRange === 12
+        ? "year"
+        : `${timeRange} months`;
+
+    return selectedEventTypeName
+      ? `No ${selectedEventTypeName.toLowerCase()} events in the last ${period}`
+      : `No events recorded in the last ${period}`;
+  };
+
   return (
-    <Card>
+    <Card className="overflow-visible">
       <CardHeader>
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Care Timeline</h2>
@@ -246,9 +267,10 @@ export function PlantEventsAsTimeline({
           <div className="text-center py-8 text-gray-500">
             Loading events...
           </div>
-        ) : timelineData.length === 0 ? (
+        ) : timelineData.length === 0 ||
+          !timelineData.some((data) => data.events.length > 0) ? (
           <div className="text-center py-8 text-gray-500">
-            No events in the selected time range
+            {getEmptyStateMessage()}
           </div>
         ) : (
           <div className="h-[100px] w-full mt-8">
@@ -266,9 +288,14 @@ export function PlantEventsAsTimeline({
                   tickFormatter={(timestamp) => format(timestamp, "MMM d")}
                   height={35}
                   tickMargin={5}
-                  axisLine={{ strokeWidth: 1 }}
+                  axisLine={{ strokeWidth: 1, stroke: "#e5e7eb" }}
+                  tick={{ fill: "#6b7280", fontSize: 12 }}
                 />
-                <Tooltip content={<CustomTooltip />} position={{ y: -70 }} />
+                <Tooltip
+                  content={<CustomTooltip />}
+                  position={{ y: -70 }}
+                  wrapperStyle={{ outline: "none" }}
+                />
                 <Line
                   type="monotone"
                   dataKey="y"
