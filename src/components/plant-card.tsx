@@ -7,12 +7,18 @@ import relativeTime from "dayjs/plugin/relativeTime";
 
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ButtonWithConfirmation } from "@/components/ui/button-with-confirmation";
 import Link from "next/link";
 import {
   LastDateByEventTypes,
   PlantEventTypeWithId,
 } from "@/core/domain/plant-event-type";
+
+dayjs.extend(relativeTime);
+
+function formatLastDate(date: string) {
+  return dayjs(date).fromNow();
+}
 
 interface PlantCardProps {
   slug: string;
@@ -22,7 +28,7 @@ interface PlantCardProps {
   location?: string;
   lastDateByEvents: LastDateByEventTypes;
   quickAccessEvents: PlantEventTypeWithId[];
-  onEventClick: (plantEvent: PlantEventTypeWithId) => () => void;
+  onEventClick: (plantEvent: PlantEventTypeWithId) => () => Promise<void>;
 }
 
 export function PlantCard({
@@ -67,7 +73,6 @@ export function PlantCard({
                 Last {plantEventType.name.toLowerCase()}
               </span>
               <span className={`text-sm font-medium`}>
-                {" "}
                 {lastDateByEvents[plantEventType.id]?.lastDate
                   ? formatLastDate(
                       lastDateByEvents[plantEventType.id]?.lastDate
@@ -75,7 +80,7 @@ export function PlantCard({
                   : "Never"}
               </span>
             </div>
-            <Button
+            <ButtonWithConfirmation
               size="sm"
               variant="outline"
               style={{
@@ -83,19 +88,16 @@ export function PlantCard({
                 color: plantEventType.displayColor,
               }}
               className="flex items-center gap-1"
-              onClick={onEventClick(plantEventType)}
+              onConfirm={onEventClick(plantEventType)}
+              dialogTitle={`Record ${plantEventType.name}`}
+              dialogDescription={`Are you sure you want to record ${plantEventType.name.toLowerCase()} for ${name}?`}
+              confirmText={`Record ${plantEventType.name}`}
             >
-              <span> {plantEventType.name}</span>
-            </Button>
+              <span>{plantEventType.name}</span>
+            </ButtonWithConfirmation>
           </div>
         ))}
       </CardFooter>
     </Card>
   );
-}
-
-function formatLastDate(date: string): string {
-  dayjs.extend(relativeTime);
-  const readable = dayjs(date).fromNow();
-  return readable;
 }

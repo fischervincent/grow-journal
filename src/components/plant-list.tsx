@@ -172,6 +172,13 @@ function PlantListContent({
     }
   }, [newPlantId]);
 
+  const handleEventClick =
+    (plant: PlantWithId) =>
+    (plantEventType: PlantEventTypeWithId) =>
+    async () => {
+      await recordPlantEvent(plant.id, plantEventType.id, new Date());
+    };
+
   return (
     <div className="container px-4 py-6">
       <div className="flex justify-between items-center mb-6">
@@ -252,11 +259,7 @@ function PlantListContent({
               {...plant}
               image="/placeholderPlant.svg"
               quickAccessEvents={quickAccessEvents}
-              onEventClick={(plantEventType: PlantEventTypeWithId) => () => {
-                recordPlantEvent(plant.id, plantEventType.id, new Date());
-                console.log("plant", plant);
-                console.log("plantEventType", plantEventType);
-              }}
+              onEventClick={handleEventClick(plant)}
             />
           </div>
         ))}
