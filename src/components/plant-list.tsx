@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
-import { PlantWithId } from "@/core/domain/plant";
+import { PlantWithId, PlantWithPhotoAndId } from "@/core/domain/plant";
 import { PlantCard } from "./plant-card";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown, Search, X } from "lucide-react";
@@ -17,7 +17,7 @@ export default function PlantList({
   quickAccessEvents,
   sortableEventTypes,
 }: {
-  plants: PlantWithId[];
+  plants: PlantWithPhotoAndId[];
   quickAccessEvents: PlantEventTypeWithId[];
   sortableEventTypes: PlantEventTypeWithId[];
 }) {
@@ -42,7 +42,7 @@ function PlantListContent({
   searchParamValue,
   orderByParamValue,
 }: {
-  plants: PlantWithId[];
+  plants: PlantWithPhotoAndId[];
   quickAccessEvents: PlantEventTypeWithId[];
   sortableEventTypes: PlantEventTypeWithId[];
   searchParamValue: string | null;
@@ -257,7 +257,7 @@ function PlantListContent({
           >
             <PlantCard
               {...plant}
-              image="/placeholderPlant.svg"
+              image={plant.mainPhotoUrl ?? "/placeholderPlant.svg"}
               quickAccessEvents={quickAccessEvents}
               onEventClick={handleEventClick(plant)}
             />

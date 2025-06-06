@@ -9,18 +9,28 @@ function generateSlug(name: string): string {
     .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
 }
 
+export type PlantPhoto = {
+  id: string;
+  url: string;
+  createdAt: Date;
+};
+
 export type Plant = {
   name: string;
+  species?: string;
+  location?: string;
   slug: string;
-  species: string | undefined;
-  location: string | undefined;
   lastDateByEvents: LastDateByEventTypes;
-}
+  deletedAt?: Date;
+};
 
 export type PlantWithId = Plant & {
   id: string;
-  deletedAt?: Date;
-}
+};
+
+export type PlantWithPhotoAndId = PlantWithId & {
+  mainPhotoUrl: string | undefined;
+};
 
 const PLANT_CREATION_ERRORS = {
   EmptyName: "EmptyName",

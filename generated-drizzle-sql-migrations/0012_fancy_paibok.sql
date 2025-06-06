@@ -1,0 +1,1 @@
+ALTER TABLE "plant_photos" ADD COLUMN "taken_at" timestamp;

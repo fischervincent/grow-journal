@@ -27,6 +27,7 @@ interface PlantCardProps {
   species?: string;
   image: string;
   location?: string;
+  mainPhotoUrl?: string;
   lastDateByEvents: LastDateByEventTypes;
   quickAccessEvents: PlantEventTypeWithId[];
   onEventClick: (plantEvent: PlantEventTypeWithId) => () => Promise<void>;
