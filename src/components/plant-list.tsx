@@ -169,42 +169,45 @@ function PlantListContent({
           )}
         </div>
 
-        <div className="flex gap-2">
-          {sortableEventTypes.map((eventType) => (
-            <Button
-              key={eventType.id}
-              variant={
-                activeSortType?.id === eventType.id ? "default" : "outline"
-              }
-              style={{
-                ...(activeSortType?.id === eventType.id
-                  ? {
-                      color: "white",
-                      backgroundColor: eventType.displayColor,
-                      borderColor: eventType.displayColor,
-                    }
-                  : {
-                      color: eventType.displayColor,
-                      borderColor: eventType.displayColor,
-                    }),
-              }}
-              className="border-1"
-              onClick={() => handleSortChange(eventType)}
-            >
-              <ArrowUpDown className="h-4 w-4 mr-2" />
-              {eventType.name}
-              {activeSortType?.id === eventType.id && (
-                <X
-                  className="h-4 w-4 ml-2"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActiveSortType(null);
-                    updateUrl(searchTerm || null, null);
-                  }}
-                />
-              )}
-            </Button>
-          ))}
+        <div className="relative flex-shrink-0">
+          <div className="overflow-x-auto flex gap-2 pb-2 pr-4 max-w-[calc(100vw-2rem)] sm:max-w-[400px] scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+            {sortableEventTypes.map((eventType) => (
+              <Button
+                key={eventType.id}
+                variant={
+                  activeSortType?.id === eventType.id ? "default" : "outline"
+                }
+                style={{
+                  ...(activeSortType?.id === eventType.id
+                    ? {
+                        color: "white",
+                        backgroundColor: eventType.displayColor,
+                        borderColor: eventType.displayColor,
+                      }
+                    : {
+                        color: eventType.displayColor,
+                        borderColor: eventType.displayColor,
+                      }),
+                }}
+                className="border-1 whitespace-nowrap flex-shrink-0"
+                onClick={() => handleSortChange(eventType)}
+              >
+                <ArrowUpDown className="h-4 w-4 mr-2" />
+                {eventType.name}
+                {activeSortType?.id === eventType.id && (
+                  <X
+                    className="h-4 w-4 ml-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveSortType(null);
+                      updateUrl(searchTerm || null, null);
+                    }}
+                  />
+                )}
+              </Button>
+            ))}
+          </div>
+          <div className="absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none" />
         </div>
       </div>
 
