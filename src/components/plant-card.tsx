@@ -110,6 +110,7 @@ export function PlantCard({
                 borderColor: plantEventType.displayColor,
                 color: plantEventType.displayColor,
               }}
+              progressColor={plantEventType.displayColor}
               className="flex items-center gap-1"
               onConfirm={handleEventClick(plantEventType)}
               dialogTitle={`Record ${plantEventType.name}`}
