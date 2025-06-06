@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { PlantWithId, PlantWithPhotoAndId } from "@/core/domain/plant";
 import { PlantCard } from "./plant-card";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown, Search, X } from "lucide-react";
 import { NewPlantDialog } from "./new-plant-dialog";
 import { PlantEventTypeWithId } from "@/core/domain/plant-event-type";
-import { cn } from "@/lib/utils";
 import { recordPlantEvent } from "@/app/actions/record-plant-event";
 import debounce from "lodash/debounce";
 import { useSearchParams } from "next/navigation";
@@ -48,11 +47,6 @@ function PlantListContent({
   searchParamValue: string | null;
   orderByParamValue: string | null;
 }) {
-  const lastCreatedPlantRef = useRef<HTMLDivElement>(null);
-  const [newPlantId, setNewPlantId] = useState<string | null>(null);
-  const [shouldAnimate, setShouldAnimate] = useState(false);
-
-  // Initialize state from URL params
   const [searchTerm, setSearchTerm] = useState(searchParamValue);
   const initialSortById = orderByParamValue;
   const [activeSortType, setActiveSortType] =
@@ -141,37 +135,6 @@ function PlantListContent({
     return filtered;
   }, [plants, searchTerm, activeSortType]);
 
-  const handlePlantCreated = (plantId: string) => {
-    setNewPlantId(plantId);
-    setShouldAnimate(false);
-  };
-
-  useEffect(() => {
-    if (newPlantId) {
-      // First scroll instantly to the new plant
-      lastCreatedPlantRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-
-      // Then trigger the animation after a small delay
-      const animationTimeout = setTimeout(() => {
-        setShouldAnimate(true);
-      }, 500);
-
-      // Clear the plant ID and animation state after animation completes
-      const cleanupTimeout = setTimeout(() => {
-        setNewPlantId(null);
-        setShouldAnimate(false);
-      }, 2500); // animation duration (2s) + small buffer
-
-      return () => {
-        clearTimeout(animationTimeout);
-        clearTimeout(cleanupTimeout);
-      };
-    }
-  }, [newPlantId]);
-
   const handleEventClick =
     (plant: PlantWithId) =>
     (plantEventType: PlantEventTypeWithId) =>
@@ -183,7 +146,7 @@ function PlantListContent({
     <div className="container px-4 py-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-green-800">My Plants</h1>
-        <NewPlantDialog onPlantCreated={handlePlantCreated} />
+        <NewPlantDialog onPlantCreated={() => {}} />
       </div>
 
       <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
@@ -247,14 +210,7 @@ function PlantListContent({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredAndSortedPlants.map((plant) => (
-          <div
-            key={plant.slug}
-            ref={plant.id === newPlantId ? lastCreatedPlantRef : null}
-            className={cn(
-              "transition-all duration-2000",
-              plant.id === newPlantId && shouldAnimate && "animate-highlight"
-            )}
-          >
+          <div key={plant.slug}>
             <PlantCard
               {...plant}
               image={plant.mainPhotoUrl ?? "/placeholderPlant.svg"}
