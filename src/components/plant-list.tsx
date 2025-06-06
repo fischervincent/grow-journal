@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { PlantWithId, PlantWithPhotoAndId } from "@/core/domain/plant";
 import { PlantCard } from "./plant-card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { PlantEventTypeWithId } from "@/core/domain/plant-event-type";
 import { recordPlantEvent } from "@/app/actions/record-plant-event";
 import debounce from "lodash/debounce";
 import { useSearchParams } from "next/navigation";
+import autoAnimate from "@formkit/auto-animate";
 
 export default function PlantList({
   plants,
@@ -48,14 +49,26 @@ function PlantListContent({
   orderByParamValue: string | null;
 }) {
   const [searchTerm, setSearchTerm] = useState(searchParamValue);
-  const initialSortById = orderByParamValue;
   const [activeSortType, setActiveSortType] =
     useState<PlantEventTypeWithId | null>(
-      sortableEventTypes.find((type) => type.id === initialSortById) || null
+      sortableEventTypes.find((type) => type.id === orderByParamValue) || null
     );
+  const [isSorting, setIsSorting] = useState(false);
+  const parentRef = useRef<HTMLDivElement>(null);
 
-  // Debounced URL update without redirect
-  const updateUrl = useMemo(
+  // Initialize auto-animate
+  useEffect(() => {
+    const parent = parentRef.current;
+    if (parent) {
+      autoAnimate(parent, {
+        duration: 150,
+        easing: "ease-in-out",
+      });
+    }
+  }, []);
+
+  // Separate debounced URL update
+  const debouncedUpdateUrl = useMemo(
     () =>
       debounce((search: string | null, sortBy: string | null) => {
         const params = new URLSearchParams(window.location.search);
@@ -79,28 +92,38 @@ function PlantListContent({
     []
   );
 
+  // Update URL whenever states change
+  useEffect(() => {
+    debouncedUpdateUrl(searchTerm || null, activeSortType?.id ?? null);
+  }, [searchTerm, activeSortType, debouncedUpdateUrl]);
+
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
-    updateUrl(value || null, activeSortType?.id ?? null);
   };
 
   const clearSearch = () => {
     setSearchTerm("");
-    updateUrl(null, activeSortType?.id ?? null);
   };
 
   const handleSortChange = (eventType: PlantEventTypeWithId) => {
     const newSortType = activeSortType?.id === eventType.id ? null : eventType;
     setActiveSortType(newSortType);
-    updateUrl(searchTerm || null, newSortType?.id ?? null);
+    setIsSorting(true);
+    // Use requestAnimationFrame to let the UI update before heavy sorting
+    requestAnimationFrame(() => {
+      // Add a small delay to ensure the UI has updated
+      setTimeout(() => {
+        setIsSorting(false);
+      }, 50);
+    });
   };
 
   // Cleanup debounce on unmount
   useEffect(() => {
     return () => {
-      updateUrl.cancel();
+      debouncedUpdateUrl.cancel();
     };
-  }, [updateUrl]);
+  }, [debouncedUpdateUrl]);
 
   const filteredAndSortedPlants = useMemo(() => {
     let filtered = [...plants];
@@ -150,22 +173,26 @@ function PlantListContent({
       </div>
 
       <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        <div className="relative flex-1 max-w-sm h-fit">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
+            <Search className="h-4 w-4 text-gray-400" />
+          </div>
           <input
             type="text"
             placeholder="Search plants..."
-            className="pl-10 pr-10 py-2 w-full border rounded-lg"
+            className="h-10 pl-9 pr-9 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent leading-none"
             value={searchTerm ?? ""}
             onChange={(e) => handleSearchChange(e.target.value)}
           />
           {searchTerm && (
-            <button
-              onClick={clearSearch}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+              <button
+                onClick={clearSearch}
+                className="h-4 w-4 text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           )}
         </div>
 
@@ -189,10 +216,16 @@ function PlantListContent({
                         borderColor: eventType.displayColor,
                       }),
                 }}
-                className="border-1 whitespace-nowrap flex-shrink-0"
+                className="border-1 whitespace-nowrap flex-shrink-0 transition-transform active:scale-95"
                 onClick={() => handleSortChange(eventType)}
               >
-                <ArrowUpDown className="h-4 w-4 mr-2" />
+                <ArrowUpDown
+                  className={`h-4 w-4 mr-2 transition-transform ${
+                    isSorting && activeSortType?.id === eventType.id
+                      ? "animate-spin"
+                      : ""
+                  }`}
+                />
                 {eventType.name}
                 {activeSortType?.id === eventType.id && (
                   <X
@@ -200,7 +233,12 @@ function PlantListContent({
                     onClick={(e) => {
                       e.stopPropagation();
                       setActiveSortType(null);
-                      updateUrl(searchTerm || null, null);
+                      setIsSorting(true);
+                      requestAnimationFrame(() => {
+                        setTimeout(() => {
+                          setIsSorting(false);
+                        }, 50);
+                      });
                     }}
                   />
                 )}
@@ -211,9 +249,14 @@ function PlantListContent({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div
+        ref={parentRef}
+        className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 transition-opacity duration-150 ${
+          isSorting ? "opacity-50" : ""
+        }`}
+      >
         {filteredAndSortedPlants.map((plant) => (
-          <div key={plant.slug}>
+          <div key={plant.slug} className="transition-all">
             <PlantCard
               {...plant}
               image={plant.mainPhotoUrl ?? "/placeholderPlant.svg"}
