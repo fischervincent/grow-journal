@@ -17,6 +17,7 @@ import { setMainPhoto } from "@/app/actions/plants/set-main-photo";
 import { deletePlantPhoto } from "@/app/actions/plants/delete-plant-photo";
 import { toast } from "sonner";
 import { PlantCareHistoryContainer } from "./plant-care-history-container";
+import { ButtonWithConfirmation } from "@/components/ui/button-with-confirmation";
 
 type PlantDetailProps = {
   plant: PlantWithPhotoAndId;
@@ -252,7 +253,7 @@ export function PlantDetail({ plant }: PlantDetailProps) {
                           fill
                           className="object-cover rounded-lg"
                         />
-                        <div className="absolute inset-x-0 bottom-0 bg-black/60 text-white text-xs p-2 opacity-100">
+                        <div className="absolute inset-x-0 bottom-0 bg-black/60 text-white text-xs p-2">
                           {new Date(photo.takenAt).toLocaleDateString(
                             undefined,
                             {
@@ -262,27 +263,61 @@ export function PlantDetail({ plant }: PlantDetailProps) {
                             }
                           )}
                         </div>
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-white hover:text-white hover:bg-black/20"
-                            onClick={() => handleSetMainPhoto(photo.id)}
-                          >
-                            {plant.mainPhotoUrl === photo.url ? (
-                              <Star className="h-5 w-5 fill-white" />
-                            ) : (
-                              <StarOff className="h-5 w-5" />
-                            )}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-white hover:text-white hover:bg-black/20"
-                            onClick={() => handleDeletePhoto(photo.id)}
-                          >
-                            <Trash2 className="h-5 w-5" />
-                          </Button>
+                        <div className="absolute inset-0 transition-all">
+                          <div className="md:hidden absolute top-0 right-0 flex items-center gap-1 p-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="bg-black/60 text-white hover:bg-black/80 hover:text-white"
+                              onClick={() => handleSetMainPhoto(photo.id)}
+                            >
+                              {plant.mainPhotoUrl === photo.url ? (
+                                <Star className="h-5 w-5 fill-white" />
+                              ) : (
+                                <StarOff className="h-5 w-5" />
+                              )}
+                            </Button>
+                            <ButtonWithConfirmation
+                              variant="ghost"
+                              size="icon"
+                              className="bg-black/60 text-white hover:bg-black/80 hover:text-white"
+                              onConfirm={() => handleDeletePhoto(photo.id)}
+                              dialogTitle="Delete Photo"
+                              dialogDescription="Are you sure you want to delete this photo? This action cannot be undone."
+                              confirmText="Delete"
+                              longPressEnabled={false}
+                            >
+                              <Trash2 className="h-5 w-5" />
+                            </ButtonWithConfirmation>
+                          </div>
+                          <div className="hidden md:flex absolute inset-0 items-center justify-center opacity-0 group-hover:opacity-100 before:absolute before:inset-0 before:bg-black/30 before:opacity-0 before:transition-opacity group-hover:before:opacity-100">
+                            <div className="relative z-10 flex gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-white hover:text-white hover:bg-black/20"
+                                onClick={() => handleSetMainPhoto(photo.id)}
+                              >
+                                {plant.mainPhotoUrl === photo.url ? (
+                                  <Star className="h-5 w-5 fill-white" />
+                                ) : (
+                                  <StarOff className="h-5 w-5" />
+                                )}
+                              </Button>
+                              <ButtonWithConfirmation
+                                variant="ghost"
+                                size="icon"
+                                className="text-white hover:text-white hover:bg-black/20"
+                                onConfirm={() => handleDeletePhoto(photo.id)}
+                                dialogTitle="Delete Photo"
+                                dialogDescription="Are you sure you want to delete this photo? This action cannot be undone."
+                                confirmText="Delete"
+                                longPressEnabled={false}
+                              >
+                                <Trash2 className="h-5 w-5" />
+                              </ButtonWithConfirmation>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ))
