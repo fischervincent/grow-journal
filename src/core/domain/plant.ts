@@ -12,7 +12,7 @@ function generateSlug(name: string): string {
 export type PlantPhoto = {
   id: string;
   url: string;
-  createdAt: Date;
+  takenAt: Date;
 };
 
 export type Plant = {

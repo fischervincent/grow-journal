@@ -21,7 +21,7 @@ const mapPhotoFromDB = (photoInDB: typeof plantPhotos.$inferSelect): PlantPhoto 
   return {
     id: photoInDB.id,
     url: photoInDB.url,
-    createdAt: photoInDB.createdAt,
+    takenAt: photoInDB.takenAt ?? photoInDB.createdAt,
   };
 };
 
@@ -143,7 +143,8 @@ export class DrizzlePlantRepository implements PlantRepository {
 
     const photos = await this.db.select()
       .from(plantPhotos)
-      .where(eq(plantPhotos.plantId, plantId));
+      .where(eq(plantPhotos.plantId, plantId))
+      .orderBy(plantPhotos.takenAt);
 
     return photos.map(mapPhotoFromDB);
   }

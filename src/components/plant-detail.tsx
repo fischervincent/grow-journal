@@ -252,6 +252,16 @@ export function PlantDetail({ plant }: PlantDetailProps) {
                           fill
                           className="object-cover rounded-lg"
                         />
+                        <div className="absolute inset-x-0 bottom-0 bg-black/60 text-white text-xs p-2 opacity-100">
+                          {new Date(photo.takenAt).toLocaleDateString(
+                            undefined,
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            }
+                          )}
+                        </div>
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                           <Button
                             variant="ghost"
