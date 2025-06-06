@@ -1,12 +1,20 @@
 "use client";
 
 import { redirect, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { signOut, useSession } from "@/lib/auth-client";
 import { getInitials } from "@/lib/utils";
+import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -33,8 +41,8 @@ export default function AccountPage() {
       </header>
 
       <ScrollArea className="flex-1 pb-20 md:pb-4">
-        <div className="p-6 max-w-2xl mx-auto">
-          <div className="flex items-center gap-4 mb-8">
+        <div className="p-6 max-w-2xl mx-auto space-y-6">
+          <div className="flex items-center gap-4">
             <Avatar className="h-20 w-20">
               <AvatarImage src="/placeholder.svg?height=80&width=80" />
               <AvatarFallback className="text-xl">{initials}</AvatarFallback>
@@ -61,6 +69,30 @@ export default function AccountPage() {
               </button>
             </div>
           </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Settings</CardTitle>
+              <CardDescription>Manage your plant care settings</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Link
+                href="/event-settings"
+                className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Settings className="h-5 w-5 text-gray-500" />
+                  <div>
+                    <div className="font-medium">Event Settings</div>
+                    <div className="text-sm text-muted-foreground">
+                      Manage your plant care event types
+                    </div>
+                  </div>
+                </div>
+                <ArrowLeft className="h-5 w-5 rotate-180 text-gray-400" />
+              </Link>
+            </CardContent>
+          </Card>
         </div>
       </ScrollArea>
     </div>
