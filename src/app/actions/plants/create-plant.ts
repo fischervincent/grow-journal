@@ -9,7 +9,7 @@ import { addNewPlantUseCase } from "@/core/use-cases/add-new-plant";
 interface CreatePlantInput {
   name: string;
   species: string | undefined;
-  location: string | undefined;
+  locationId: string | undefined;
 }
 
 export async function createPlant(input: CreatePlantInput) {
@@ -17,12 +17,16 @@ export async function createPlant(input: CreatePlantInput) {
   const session = await auth.api.getSession({
     headers: await headers()
   })
+  console.log({ input })
   const userId = session?.user?.id;
   if (!userId) {
     return [null, 'Unauthorized'] as const // for now let's not handle errors in form
   }
 
-  const [plant, errors] = createNewPlant(input);
+  const [plant, errors] = createNewPlant({
+    name: input.name,
+    species: input.species,
+  });
 
   if (errors) {
     return [null, errors] as const;
@@ -31,9 +35,9 @@ export async function createPlant(input: CreatePlantInput) {
   const plantRepository = getPlantRepository();
   const { addNewPlant } = addNewPlantUseCase(plantRepository);
   const newPlantCreationResult = await addNewPlant({
-    location: plant.location,
     name: plant.name,
     species: plant.species,
+    locationId: input.locationId,
   }, userId);
 
   return newPlantCreationResult

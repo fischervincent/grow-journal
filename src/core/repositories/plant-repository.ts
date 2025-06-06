@@ -1,11 +1,13 @@
 import { Plant, PlantPhoto, PlantWithId, PlantWithPhotoAndId } from "../domain/plant";
 
+export type NewPlant = Plant & { locationId: string | undefined };
+
 export interface PlantRepository {
-  create(plant: Plant, userId: string): Promise<PlantWithId>;
+  create(plant: NewPlant, userId: string): Promise<PlantWithId>;
   findById(id: string, userId: string): Promise<PlantWithPhotoAndId | null>;
   findByUserId(userId: string): Promise<PlantWithPhotoAndId[]>;
   findBySlugAndUserId(slug: string, userId: string): Promise<PlantWithPhotoAndId | null>;
-  update(id: string, userId: string, plant: Partial<Plant>): Promise<PlantWithId>;
+  update(id: string, userId: string, plant: Partial<Plant & { locationId: string | undefined }>): Promise<PlantWithPhotoAndId>;
   delete(id: string, userId: string): Promise<PlantWithId>;
   removeEventType(userId: string, eventTypeId: string): Promise<void>;
 

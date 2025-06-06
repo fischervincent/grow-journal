@@ -18,6 +18,8 @@ import { deletePlantPhoto } from "@/app/actions/plants/delete-plant-photo";
 import { toast } from "sonner";
 import { PlantCareHistoryContainer } from "./plant-care-history-container";
 import { ButtonWithConfirmation } from "@/components/ui/button-with-confirmation";
+import { LocationField } from "@/components/location-field";
+import { updatePlantLocation } from "@/app/actions/plants/update-plant-location";
 
 type PlantDetailProps = {
   plant: PlantWithPhotoAndId;
@@ -25,110 +27,84 @@ type PlantDetailProps = {
 
 export function PlantDetail({ plant }: PlantDetailProps) {
   const router = useRouter();
-  const [isDeleted, setIsDeleted] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
   const [photos, setPhotos] = useState<PlantPhoto[]>([]);
-  const [isLoadingPhotos, setIsLoadingPhotos] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
 
-  // Load photos on component mount
   useEffect(() => {
     const loadPhotos = async () => {
-      const { photos, error } = await getPlantPhotos(plant.id);
-      if (error) {
-        toast.error(error);
-      } else {
-        setPhotos(photos);
+      const result = await getPlantPhotos(plant.id);
+      if (!result.error) {
+        setPhotos(result.photos);
       }
-      setIsLoadingPhotos(false);
     };
     loadPhotos();
   }, [plant.id]);
-
-  // Check if plant is already deleted
-  useEffect(() => {
-    if (plant.deletedAt) {
-      setIsDeleted(true);
-      const timer = setTimeout(() => {
-        router.back();
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [plant.deletedAt, router]);
 
   const handleBack = () => {
     router.back();
   };
 
   const handleDeleteSuccess = () => {
-    setIsDeleted(true);
+    router.push("/plants");
   };
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      setSelectedFile(event.target.files[0]);
+  const handleLocationChange = async (locationId: string | undefined) => {
+    const result = await updatePlantLocation(plant.id, locationId);
+    if (result.success) {
+      router.refresh();
+    } else {
+      toast.error(result.error || "Failed to update location");
     }
   };
 
-  const handleUploadPhoto = async () => {
-    if (!selectedFile) return;
+  const handlePhotoUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
     setIsUploading(true);
     try {
       const formData = new FormData();
-      formData.append("file", selectedFile);
+      formData.append("file", file);
       formData.append("plantId", plant.id);
-
-      const { photo, error } = await uploadPlantPhoto(formData);
-      if (error) {
-        toast.error(error);
-        return;
-      }
-
-      if (photo) {
-        setPhotos([...photos, photo]);
-        toast.success("Photo uploaded successfully");
+      const result = await uploadPlantPhoto(formData);
+      if (result.photo) {
+        setPhotos([...photos, result.photo]);
+        if (!plant.mainPhotoUrl) {
+          await setMainPhoto(plant.id, result.photo.id);
+          router.refresh();
+        }
+      } else if (result.error) {
+        toast.error(result.error);
       }
     } finally {
       setIsUploading(false);
-      setSelectedFile(null);
     }
   };
 
   const handleSetMainPhoto = async (photoId: string) => {
-    const { plant: updatedPlant, error } = await setMainPhoto(
-      plant.id,
-      photoId
-    );
-    if (error) {
-      toast.error(error);
-      return;
-    }
-
-    if (updatedPlant) {
-      router.refresh(); // Refresh the page to show the new main photo
-      toast.success("Main photo updated");
+    const result = await setMainPhoto(plant.id, photoId);
+    if (!result.error && result.plant) {
+      router.refresh();
+    } else {
+      toast.error(result.error || "Failed to set main photo");
     }
   };
 
   const handleDeletePhoto = async (photoId: string) => {
-    const { success, error } = await deletePlantPhoto(plant.id, photoId);
-    if (error) {
-      toast.error(error);
-      return;
-    }
-
-    if (success) {
+    const result = await deletePlantPhoto(plant.id, photoId);
+    if (result.success) {
       setPhotos(photos.filter((p) => p.id !== photoId));
-      if (photos.find((p) => p.id === photoId)?.url === plant.mainPhotoUrl) {
-        // If we deleted the main photo, refresh to update the UI
+      if (plant.mainPhotoUrl) {
         router.refresh();
       }
-      toast.success("Photo deleted successfully");
+    } else {
+      toast.error(result.error || "Failed to delete photo");
     }
   };
 
-  if (isDeleted) {
+  if (plant.deletedAt) {
     return (
       <div className="container max-w-2xl px-4 py-6">
         <Card>
@@ -181,12 +157,19 @@ export function PlantDetail({ plant }: PlantDetailProps) {
               </div>
             )}
           </div>
-          <div className="flex items-center justify-between p-4 bg-card">
-            <h1 className="text-2xl font-semibold">{plant.name}</h1>
-            <DeletePlantButton
-              plantId={plant.id}
-              plantName={plant.name}
-              onDeleteSuccess={handleDeleteSuccess}
+          <div className="p-4 bg-card">
+            <div className="flex items-center justify-between mb-2">
+              <h1 className="text-2xl font-semibold">{plant.name}</h1>
+              <DeletePlantButton
+                plantId={plant.id}
+                plantName={plant.name}
+                onDeleteSuccess={handleDeleteSuccess}
+              />
+            </div>
+            <LocationField
+              locationName={plant.location}
+              locationId={plant.locationId}
+              onLocationChange={handleLocationChange}
             />
           </div>
         </CardContent>
@@ -209,7 +192,7 @@ export function PlantDetail({ plant }: PlantDetailProps) {
                     <Input
                       type="file"
                       accept="image/*"
-                      onChange={handleFileSelect}
+                      onChange={handlePhotoUpload}
                       className="hidden"
                       id="photo-upload"
                     />
@@ -220,24 +203,15 @@ export function PlantDetail({ plant }: PlantDetailProps) {
                       <Camera className="h-4 w-4 mr-2" />
                       Select Photo
                     </Label>
-                    {selectedFile && (
-                      <Button
-                        onClick={handleUploadPhoto}
-                        disabled={isUploading}
-                      >
-                        {isUploading ? "Uploading..." : "Upload"}
-                      </Button>
+                    {isUploading && (
+                      <Button disabled={isUploading}>Uploading...</Button>
                     )}
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {isLoadingPhotos ? (
-                    <div className="col-span-full text-center py-8 text-gray-500">
-                      Loading photos...
-                    </div>
-                  ) : photos.length === 0 ? (
+                  {photos.length === 0 ? (
                     <div className="col-span-full text-center py-8 text-gray-500">
                       No photos yet
                     </div>

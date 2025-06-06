@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import {
@@ -12,22 +12,34 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { createPlant } from "@/app/actions/plants/create-plant";
 import { useRouter } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
+import { getLocations } from "@/app/actions/plants/get-locations";
+import { addLocation } from "@/app/actions/plants/add-location";
+import { toast } from "sonner";
+import { LocationInput } from "./location-input";
+
+interface Location {
+  id: string;
+  name: string;
+}
 
 interface NewPlantDialogProps {
   onPlantCreated: (plantId: string) => void;
 }
 
-export function NewPlantDialog({ onPlantCreated }: NewPlantDialogProps) {
+interface NewPlantDialogContentProps {
+  locations: Location[];
+  onPlantCreated: (plantId: string) => void;
+  onAddLocation: (name: string) => Promise<Location | undefined>;
+}
+
+function NewPlantDialogContent({
+  locations,
+  onPlantCreated,
+  onAddLocation,
+}: NewPlantDialogContentProps) {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -45,7 +57,7 @@ export function NewPlantDialog({ onPlantCreated }: NewPlantDialogProps) {
       species: formData.isSpeciesName
         ? formData.name
         : formData.species || undefined,
-      location: formData.location || undefined,
+      locationId: formData.location || undefined,
     });
 
     if (createdPlant) {
@@ -60,6 +72,17 @@ export function NewPlantDialog({ onPlantCreated }: NewPlantDialogProps) {
       onPlantCreated(createdPlant.id);
     } else {
       console.error("Failed to create plant:", errors);
+    }
+  };
+
+  const handleLocationChange = (locationId: string | undefined) => {
+    setFormData((prev) => ({ ...prev, location: locationId || "" }));
+  };
+
+  const handleAddNewLocation = async (name: string) => {
+    const location = await onAddLocation(name);
+    if (location) {
+      setFormData((prev) => ({ ...prev, location: location.id }));
     }
   };
 
@@ -119,24 +142,12 @@ export function NewPlantDialog({ onPlantCreated }: NewPlantDialogProps) {
           )}
           <div className="space-y-1.5">
             <Label htmlFor="plant-location">Location (Optional)</Label>
-            <Select
-              value={formData.location}
-              onValueChange={(value) =>
-                setFormData((prev) => ({ ...prev, location: value }))
-              }
-            >
-              <SelectTrigger id="plant-location">
-                <SelectValue placeholder="Select location" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="living-room">Living Room</SelectItem>
-                <SelectItem value="bedroom">Bedroom</SelectItem>
-                <SelectItem value="kitchen">Kitchen</SelectItem>
-                <SelectItem value="bathroom">Bathroom</SelectItem>
-                <SelectItem value="office">Office</SelectItem>
-                <SelectItem value="balcony">Balcony</SelectItem>
-              </SelectContent>
-            </Select>
+            <LocationInput
+              locations={locations}
+              selectedLocationId={formData.location}
+              onLocationChange={handleLocationChange}
+              onAddLocation={handleAddNewLocation}
+            />
           </div>
           <Button
             type="submit"
@@ -147,5 +158,38 @@ export function NewPlantDialog({ onPlantCreated }: NewPlantDialogProps) {
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+export function NewPlantDialog({ onPlantCreated }: NewPlantDialogProps) {
+  const [locations, setLocations] = useState<Location[]>([]);
+
+  useEffect(() => {
+    const loadLocations = async () => {
+      const locationsList = await getLocations();
+      setLocations(locationsList);
+    };
+    loadLocations();
+  }, []);
+
+  const handleAddLocation = async (name: string) => {
+    const result = await addLocation(name);
+    if (result.success && result.location) {
+      const newLocation = result.location;
+      setLocations([...locations, newLocation]);
+      toast.success("Location added successfully");
+      return newLocation;
+    } else {
+      toast.error("Failed to add location");
+      return undefined;
+    }
+  };
+
+  return (
+    <NewPlantDialogContent
+      locations={locations}
+      onPlantCreated={onPlantCreated}
+      onAddLocation={handleAddLocation}
+    />
   );
 }

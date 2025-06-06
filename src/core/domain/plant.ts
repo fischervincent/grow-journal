@@ -18,10 +18,10 @@ export type PlantPhoto = {
 export type Plant = {
   name: string;
   species?: string;
-  location?: string;
   slug: string;
   lastDateByEvents: LastDateByEventTypes;
   deletedAt?: Date;
+  locationId?: string;
 };
 
 export type PlantWithId = Plant & {
@@ -30,6 +30,8 @@ export type PlantWithId = Plant & {
 
 export type PlantWithPhotoAndId = PlantWithId & {
   mainPhotoUrl: string | undefined;
+  location: string | undefined;
+  locationId: string | undefined;
 };
 
 const PLANT_CREATION_ERRORS = {
@@ -57,7 +59,6 @@ export type CreateNewPlantResult = [Plant, undefined] | [null, PlantCreationErro
 export const createNewPlant = (newPlantInput: {
   name: string;
   species: string | undefined;
-  location: string | undefined;
 }): CreateNewPlantResult => {
   const parseResult = NewPlantSchema.safeParse(newPlantInput)
   if (!parseResult.success) {
@@ -79,7 +80,6 @@ export const createNewPlant = (newPlantInput: {
       name: parseResult.data.name,
       slug: generateSlug(parseResult.data.name),
       species: parseResult.data.speciesName,
-      location: newPlantInput.location,
       lastDateByEvents: {},
     },
     undefined,

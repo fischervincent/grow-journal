@@ -1,16 +1,16 @@
 import { and, eq, isNull, sql } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { plants, plantPhotos } from "../postgres-drizzle/schema/plant-schema";
-import type { PlantRepository } from "../../core/repositories/plant-repository";
+import type { NewPlant, PlantRepository } from "../../core/repositories/plant-repository";
 import { Plant, PlantPhoto, PlantWithId, PlantWithPhotoAndId } from "@/core/domain/plant";
 import { LastDateByEventTypes } from "@/core/domain/plant-event-type";
+import { locations } from "../postgres-drizzle/schema/location-schema";
 
 const mapPlantFromDB = (plantInDB: typeof plants.$inferSelect): PlantWithId => {
   return {
     id: plantInDB.id,
     name: plantInDB.name,
     species: plantInDB.species || undefined,
-    location: plantInDB.location || undefined,
     slug: plantInDB.slug,
     lastDateByEvents: plantInDB.lastDateByEvents as LastDateByEventTypes,
     deletedAt: plantInDB.deletedAt ?? undefined,
@@ -25,45 +25,73 @@ const mapPhotoFromDB = (photoInDB: typeof plantPhotos.$inferSelect): PlantPhoto 
   };
 };
 
-const mapPlantWithPhotosFromDB = (plant: typeof plants.$inferSelect, photo: typeof plantPhotos.$inferSelect | null): PlantWithPhotoAndId => {
+const mapPlantWithPhotosFromDB = (
+  plant: typeof plants.$inferSelect,
+  photo: typeof plantPhotos.$inferSelect | null,
+  location: typeof locations.$inferSelect | null
+): PlantWithPhotoAndId => {
   return {
     ...mapPlantFromDB(plant),
     mainPhotoUrl: photo?.url,
+    location: location?.name,
+    locationId: location?.id,
   };
 };
 
 export class DrizzlePlantRepository implements PlantRepository {
   constructor(private readonly db: PostgresJsDatabase) { }
 
-  async create(plant: Plant, userId: string) {
+  async create(plant: NewPlant, userId: string) {
     const [createdPlant] = await this.db.insert(plants)
-      .values({ ...plant, userId })
+      .values({
+        ...plant,
+        userId,
+        locationId: plant.locationId || null,
+      })
       .returning();
     return mapPlantFromDB(createdPlant);
   }
 
   async findById(id: string, userId: string) {
-    const [plantsAndPhotos] = await this.db.select()
+    const [plantsAndPhotos] = await this.db.select({
+      plants: plants,
+      plant_photos: plantPhotos,
+      locations: locations,
+    })
       .from(plants)
       .where(and(
         eq(plants.id, id),
         eq(plants.userId, userId),
       ))
       .leftJoin(plantPhotos, eq(plants.mainPhotoId, plantPhotos.id))
+      .leftJoin(locations, eq(plants.locationId, locations.id))
       .limit(1);
-    return plantsAndPhotos ? mapPlantWithPhotosFromDB(plantsAndPhotos.plants, plantsAndPhotos.plant_photos) : null;
+
+    return plantsAndPhotos ? mapPlantWithPhotosFromDB(
+      plantsAndPhotos.plants,
+      plantsAndPhotos.plant_photos,
+      plantsAndPhotos.locations
+    ) : null;
   }
 
   async findByUserId(userId: string) {
-    const plantsInDB = await this.db.select()
+    const plantsInDB = await this.db.select({
+      plants: plants,
+      plant_photos: plantPhotos,
+      locations: locations,
+    })
       .from(plants)
       .where(and(
         eq(plants.userId, userId),
         isNull(plants.deletedAt)
       ))
       .leftJoin(plantPhotos, eq(plants.mainPhotoId, plantPhotos.id))
+      .leftJoin(locations, eq(plants.locationId, locations.id))
       .orderBy(plants.createdAt);
-    return plantsInDB.map(({ plants, plant_photos }) => mapPlantWithPhotosFromDB(plants, plant_photos));
+
+    return plantsInDB.map(({ plants, plant_photos, locations }) =>
+      mapPlantWithPhotosFromDB(plants, plant_photos, locations)
+    );
   }
 
   async findBySlugAndUserId(slug: string, userId: string) {
@@ -74,20 +102,36 @@ export class DrizzlePlantRepository implements PlantRepository {
         eq(plants.userId, userId)
       ))
       .leftJoin(plantPhotos, eq(plants.mainPhotoId, plantPhotos.id))
+      .leftJoin(locations, eq(plants.locationId, locations.id))
       .limit(1);
-    return plantsAndPhotos ? mapPlantWithPhotosFromDB(plantsAndPhotos.plants, plantsAndPhotos.plant_photos) : null;
+    return plantsAndPhotos ? mapPlantWithPhotosFromDB(plantsAndPhotos.plants, plantsAndPhotos.plant_photos, plantsAndPhotos.locations) : null;
   }
 
-  async update(id: string, userId: string, plant: Partial<Plant>) {
-    const [updatedPlant] = await this.db.update(plants)
-      .set({ ...plant, updatedAt: new Date() })
+  async update(id: string, userId: string, plant: Partial<Plant & { locationId: string | undefined }>) {
+    await this.db.update(plants)
+      .set({
+        ...plant,
+        locationId: plant.locationId === undefined ? undefined : plant.locationId || null,
+        updatedAt: new Date(),
+      })
       .where(and(
         eq(plants.id, id),
         eq(plants.userId, userId),
         isNull(plants.deletedAt)
-      ))
-      .returning();
-    return mapPlantFromDB(updatedPlant);
+      )).execute();
+
+    const [updatedPlantWithJoin] = await this.db.select({
+      plants: plants,
+      locations: locations,
+      plant_photos: plantPhotos,
+    })
+      .from(plants)
+      .where(eq(plants.id, id))
+      .leftJoin(plantPhotos, eq(plants.mainPhotoId, plantPhotos.id))
+      .leftJoin(locations, eq(plants.locationId, locations.id))
+      .limit(1);
+
+    return mapPlantWithPhotosFromDB(updatedPlantWithJoin.plants, updatedPlantWithJoin.plant_photos, updatedPlantWithJoin.locations);
   }
 
   async delete(id: string, userId: string) {
