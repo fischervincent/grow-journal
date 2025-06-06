@@ -26,7 +26,7 @@ export function PlantCareHistory({
           value={viewMode}
           onValueChange={(value) => setViewMode(value as ViewMode)}
         >
-          <TabsList>
+          <TabsList className="bg-card">
             <TabsTrigger value="list">List View</TabsTrigger>
             <TabsTrigger value="timeline">Timeline View</TabsTrigger>
           </TabsList>

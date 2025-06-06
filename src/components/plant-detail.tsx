@@ -3,7 +3,7 @@
 import { PlantPhoto, PlantWithPhotoAndId } from "@/core/domain/plant";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { MapPin, ArrowLeft, Check, Camera, Star, StarOff } from "lucide-react";
+import { ArrowLeft, Check, Camera, Star, StarOff } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { DeletePlantButton } from "@/components/delete-plant-button";
@@ -140,52 +140,49 @@ export function PlantDetail({ plant }: PlantDetailProps) {
         </Button>
       </div>
 
-      <Card>
-        <div className="relative h-64 sm:h-96">
-          <Image
-            src={plant.mainPhotoUrl ?? "/placeholderPlant.svg"}
-            alt={plant.name}
-            fill
-            className="object-cover rounded-t-lg"
-          />
-        </div>
-
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">{plant.name}</h1>
-              {plant.species && (
-                <span className="text-sm text-gray-500">{plant.species}</span>
-              )}
-            </div>
+      <Card className="bg-background">
+        <CardContent className="p-0">
+          <div className="relative aspect-square w-full overflow-hidden rounded-t-lg bg-muted">
+            {plant.mainPhotoUrl ? (
+              <Image
+                src={plant.mainPhotoUrl}
+                alt=""
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center">
+                <Image
+                  src="/placeholderPlant.svg"
+                  alt=""
+                  width={200}
+                  height={200}
+                  className="opacity-50"
+                />
+              </div>
+            )}
+          </div>
+          <div className="flex items-center justify-between p-4 bg-card">
+            <h1 className="text-2xl font-semibold">{plant.name}</h1>
             <DeletePlantButton
               plantId={plant.id}
               plantName={plant.name}
               onDeleteSuccess={handleDeleteSuccess}
             />
           </div>
-        </CardHeader>
-
-        <CardContent>
-          {plant.location && (
-            <div className="flex items-center text-gray-500">
-              <MapPin className="h-5 w-5 mr-2" />
-              <span>{plant.location}</span>
-            </div>
-          )}
         </CardContent>
       </Card>
 
       <div className="mt-6">
         <Tabs defaultValue="photos" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-3 bg-card">
             <TabsTrigger value="photos">Photos</TabsTrigger>
             <TabsTrigger value="care">Care History</TabsTrigger>
             <TabsTrigger value="notes">Notes</TabsTrigger>
           </TabsList>
 
           <TabsContent value="photos" className="mt-4">
-            <Card>
+            <Card className="bg-card">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold">Photos</h2>
@@ -199,7 +196,7 @@ export function PlantDetail({ plant }: PlantDetailProps) {
                     />
                     <Label
                       htmlFor="photo-upload"
-                      className="cursor-pointer inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4"
+                      className="cursor-pointer inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 dark:border-input dark:text-foreground"
                     >
                       <Camera className="h-4 w-4 mr-2" />
                       Select Photo
