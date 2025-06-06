@@ -6,6 +6,7 @@ import { PlantPhoto } from "@/core/domain/plant";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { v4 as uuidv4 } from "uuid";
+import { revalidatePath } from "next/cache";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -63,9 +64,10 @@ export async function uploadPlantPhoto(
     // If this is the first photo, set it as the main photo
     const plant = await plantRepository.findById(plantId, userId);
     if (plant && !plant.mainPhotoUrl) {
+      console.log("Setting main photo", plantId, userId, photo.id);
       await plantRepository.setMainPhoto(plantId, userId, photo.id);
     }
-
+    revalidatePath(`/plants/${plantId}`)
     return { photo, error: null };
   } catch (error) {
     console.error("Error uploading photo:", error);
