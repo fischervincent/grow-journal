@@ -63,6 +63,7 @@ interface CustomDotProps {
   payload?: TimelineDataPoint;
   value?: number;
   index?: number;
+  active?: boolean;
 }
 
 interface TooltipProps {
@@ -144,7 +145,7 @@ export function PlantEventsAsTimeline({
     });
   }, [plantEvents, selectedTimeRange, eventTypes]);
 
-  const CustomDot = ({ cx, cy, payload }: CustomDotProps) => {
+  const CustomDot = ({ cx, cy, payload, active }: CustomDotProps) => {
     if (
       !cx ||
       !cy ||
@@ -156,16 +157,36 @@ export function PlantEventsAsTimeline({
 
     return (
       <g>
+        {/* Invisible larger touch target */}
+        <circle
+          cx={cx}
+          cy={cy}
+          r={15}
+          fill="transparent"
+          style={{ cursor: "pointer" }}
+        />
         {payload.events.map((event, index) => (
-          <circle
-            key={event.id}
-            cx={cx}
-            cy={cy - index * 12} // Increased spacing between stacked events
-            r={5}
-            fill={event.color}
-            stroke="white"
-            strokeWidth={2}
-          />
+          <g key={event.id}>
+            {/* Glow effect for active state */}
+            {active && (
+              <circle
+                cx={cx}
+                cy={cy - index * 12}
+                r={8}
+                fill={event.color}
+                opacity={0.2}
+              />
+            )}
+            {/* Visible dot */}
+            <circle
+              cx={cx}
+              cy={cy - index * 12}
+              r={5}
+              fill={event.color}
+              stroke="white"
+              strokeWidth={2}
+            />
+          </g>
         ))}
       </g>
     );
@@ -301,7 +322,7 @@ export function PlantEventsAsTimeline({
                   dataKey="y"
                   stroke="#e5e7eb"
                   dot={<CustomDot />}
-                  activeDot={false}
+                  activeDot={<CustomDot />}
                   isAnimationActive={false}
                   yAxisId={0}
                   strokeWidth={1}
