@@ -152,10 +152,17 @@ export function PlantDetail({ plant }: PlantDetailProps) {
 
         <CardHeader>
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">{plant.name}</h1>
-            {plant.species && (
-              <span className="text-sm text-gray-500">{plant.species}</span>
-            )}
+            <div>
+              <h1 className="text-2xl font-bold">{plant.name}</h1>
+              {plant.species && (
+                <span className="text-sm text-gray-500">{plant.species}</span>
+              )}
+            </div>
+            <DeletePlantButton
+              plantId={plant.id}
+              plantName={plant.name}
+              onDeleteSuccess={handleDeleteSuccess}
+            />
           </div>
         </CardHeader>
 
@@ -267,14 +274,6 @@ export function PlantDetail({ plant }: PlantDetailProps) {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
-
-      <div className="mt-6 flex justify-end">
-        <DeletePlantButton
-          plantId={plant.id}
-          plantName={plant.name}
-          onDeleteSuccess={handleDeleteSuccess}
-        />
       </div>
     </div>
   );
