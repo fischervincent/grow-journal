@@ -15,7 +15,7 @@ export default function RootLayout({
 }) {
   return (
     <>
-      <div className="flex flex-col h-screen bg-[#f8faf7]">
+      <div className="flex flex-col min-h-screen bg-[#f8faf7]">
         <Navigation />
         <main>{children}</main>
       </div>
