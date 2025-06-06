@@ -25,6 +25,25 @@ export class DrizzlePlantEventRepository implements PlantEventRepository {
     return mapPlantEventFromDB(createdEvent);
   }
 
+  async findById(id: string): Promise<PlantEventWithId | null> {
+    const [event] = await this.db
+      .select()
+      .from(plantEvents)
+      .where(eq(plantEvents.id, id))
+      .limit(1);
+
+    return event ? mapPlantEventFromDB(event) : null;
+  }
+
+  async delete(id: string, userId: string): Promise<void> {
+    await this.db
+      .delete(plantEvents)
+      .where(and(
+        eq(plantEvents.id, id),
+        eq(plantEvents.userId, userId)
+      ));
+  }
+
   async findByPlantId(plantId: string, userId: string): Promise<PlantEventWithId[]> {
     const eventsInDB = await this.db
       .select()

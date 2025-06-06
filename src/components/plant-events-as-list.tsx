@@ -10,15 +10,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar } from "lucide-react";
-import { PlantEventType } from "@/core/domain/plant-event-type";
-import { PlantEventWithId } from "@/core/domain/plant-event";
+import { PlantEventTypeWithId } from "@/core/domain/plant-event-type";
 import { getPlantEvents } from "@/app/actions/plants/get-plant-events";
+import { PlantEventWithId } from "@/core/domain/plant-event";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { Trash2 } from "lucide-react";
+import { deletePlantEvent } from "@/app/actions/plants/delete-plant-event";
+import { ButtonWithConfirmation } from "./ui/button-with-confirmation";
 
 interface PlantEventsAsListProps {
   plantId: string;
-  eventTypes: (PlantEventType & { id: string })[];
+  eventTypes: PlantEventTypeWithId[];
 }
 
 const ALL_EVENTS = "all";
@@ -48,6 +51,19 @@ export function PlantEventsAsList({
     };
     loadEvents();
   }, [plantId, selectedEventType]);
+
+  const handleDeleteEvent = async (eventId: string) => {
+    const { success, error } = await deletePlantEvent(eventId);
+    if (error) {
+      toast.error(error);
+      return;
+    }
+
+    if (success) {
+      setPlantEvents(plantEvents.filter((e) => e.id !== eventId));
+      toast.success("Event deleted successfully");
+    }
+  };
 
   return (
     <Card>
@@ -92,24 +108,39 @@ export function PlantEventsAsList({
               return (
                 <div
                   key={plantEvent.id}
-                  className="flex items-center gap-4 p-4 rounded-lg border"
+                  className="flex items-center justify-between p-4 rounded-lg bg-card hover:bg-accent/5 transition-colors"
+                  style={{
+                    borderLeft: `3px solid ${eventType.displayColor}`,
+                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                  }}
                 >
-                  <div
-                    className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: eventType.displayColor }}
-                  />
-                  <div className="flex-1">
-                    <p className="font-medium">{eventType.name}</p>
-                    {plantEvent.comment && (
-                      <p className="text-sm text-gray-600 mt-1">
-                        {plantEvent.comment}
-                      </p>
-                    )}
-                    <p className="text-sm text-gray-500">
+                  <div>
+                    <div
+                      className="font-medium"
+                      style={{ color: eventType.displayColor }}
+                    >
+                      {eventType.name}
+                    </div>
+                    <div className="text-sm text-gray-500">
                       <Calendar className="inline-block w-4 h-4 mr-1" />
                       {format(new Date(plantEvent.plantEventDateTime), "PPp")}
-                    </p>
+                    </div>
+                    {plantEvent.comment && (
+                      <div className="mt-2 text-sm">{plantEvent.comment}</div>
+                    )}
                   </div>
+                  <ButtonWithConfirmation
+                    variant="ghost"
+                    size="icon"
+                    onConfirm={() => handleDeleteEvent(plantEvent.id)}
+                    dialogTitle="Delete Event"
+                    dialogDescription={`Are you sure you want to delete this ${eventType.name.toLowerCase()} event? This action cannot be undone.`}
+                    confirmText="Delete"
+                    className="text-gray-400 hover:text-red-600 hover:bg-red-50"
+                    longPressEnabled={false}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </ButtonWithConfirmation>
                 </div>
               );
             })}

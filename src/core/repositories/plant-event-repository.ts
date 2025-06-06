@@ -15,4 +15,6 @@ export interface PlantEventRepository {
   create(plantEvent: PlantEvent, userId: string): Promise<PlantEventWithId>;
   findByPlantId(plantId: string, userId: string): Promise<PlantEventWithId[]>;
   findByPlantIdAndType(plantId: string, plantEventTypeId: string, userId: string): Promise<PlantEventWithId[]>;
+  findById(id: string): Promise<PlantEventWithId | null>;
+  delete(id: string, userId: string): Promise<void>;
 } 
