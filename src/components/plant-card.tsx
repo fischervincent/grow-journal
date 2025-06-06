@@ -4,7 +4,7 @@ import type React from "react";
 import Image from "next/image";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-
+import { useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { MapPin } from "lucide-react";
 import { ButtonWithConfirmation } from "@/components/ui/button-with-confirmation";
@@ -13,6 +13,7 @@ import {
   LastDateByEventTypes,
   PlantEventTypeWithId,
 } from "@/core/domain/plant-event-type";
+import { cn } from "@/lib/utils";
 
 dayjs.extend(relativeTime);
 
@@ -41,6 +42,22 @@ export function PlantCard({
   quickAccessEvents,
   onEventClick,
 }: PlantCardProps) {
+  const [updatingEventId, setUpdatingEventId] = useState<string | null>(null);
+
+  const handleEventClick =
+    (plantEventType: PlantEventTypeWithId) => async () => {
+      const originalCallback = onEventClick(plantEventType);
+      setUpdatingEventId(plantEventType.id);
+      try {
+        await originalCallback();
+      } finally {
+        // Reset after animation duration
+        setTimeout(() => {
+          setUpdatingEventId(null);
+        }, 1000);
+      }
+    };
+
   return (
     <Card className="overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 py-0 h-full">
       <Link href={`/plants/${slug}`}>
@@ -72,7 +89,13 @@ export function PlantCard({
               <span className="text-sm text-muted-foreground">
                 Last {plantEventType.name.toLowerCase()}
               </span>
-              <span className={`text-sm font-medium`}>
+              <span
+                className={cn(
+                  "text-sm font-medium transition-all duration-300",
+                  updatingEventId === plantEventType.id &&
+                    "text-green-600 scale-105"
+                )}
+              >
                 {lastDateByEvents[plantEventType.id]?.lastDate
                   ? formatLastDate(
                       lastDateByEvents[plantEventType.id]?.lastDate
@@ -88,7 +111,7 @@ export function PlantCard({
                 color: plantEventType.displayColor,
               }}
               className="flex items-center gap-1"
-              onConfirm={onEventClick(plantEventType)}
+              onConfirm={handleEventClick(plantEventType)}
               dialogTitle={`Record ${plantEventType.name}`}
               dialogDescription={`Are you sure you want to record ${plantEventType.name.toLowerCase()} for ${name}?`}
               confirmText={`Record ${plantEventType.name}`}
