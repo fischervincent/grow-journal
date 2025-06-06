@@ -178,10 +178,14 @@ export function PlantDetail({ plant }: PlantDetailProps) {
       <div className="mt-6">
         <Tabs defaultValue="photos" className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-card">
-            <TabsTrigger value="photos">Photos</TabsTrigger>
             <TabsTrigger value="care">Care History</TabsTrigger>
+            <TabsTrigger value="photos">Photos</TabsTrigger>
             <TabsTrigger value="notes">Notes</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="care" className="mt-4">
+            <PlantCareHistoryContainer plantId={plant.id} />
+          </TabsContent>
 
           <TabsContent value="photos" className="mt-4">
             <Card className="bg-card">
@@ -299,10 +303,6 @@ export function PlantDetail({ plant }: PlantDetailProps) {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-
-          <TabsContent value="care" className="mt-4">
-            <PlantCareHistoryContainer plantId={plant.id} />
           </TabsContent>
 
           <TabsContent value="notes" className="mt-4">
