@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { plantEvents } from "../postgres-drizzle/schema/plant-events-schema";
 import type { PlantEventRepository } from "../../core/repositories/plant-event-repository";
@@ -30,7 +30,9 @@ export class DrizzlePlantEventRepository implements PlantEventRepository {
       .select()
       .from(plantEvents)
       .where(and(eq(plantEvents.plantId, plantId), eq(plantEvents.userId, userId)))
-      .orderBy(plantEvents.plantEventDateTime);
+      .orderBy(desc(plantEvents.plantEventDateTime));
+    console.log(eventsInDB);
+
     return eventsInDB.map(mapPlantEventFromDB);
   }
 
@@ -49,7 +51,8 @@ export class DrizzlePlantEventRepository implements PlantEventRepository {
           eq(plantEvents.userId, userId)
         )
       )
-      .orderBy(plantEvents.plantEventDateTime);
+      .orderBy(desc(plantEvents.plantEventDateTime));
+    console.log(eventsInDB);
     return eventsInDB.map(mapPlantEventFromDB);
   }
 } 
