@@ -3,7 +3,7 @@
 import { PlantPhoto, PlantWithPhotoAndId } from "@/core/domain/plant";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { ArrowLeft, Check, Camera, Star, StarOff } from "lucide-react";
+import { ArrowLeft, Check, Camera, Star, StarOff, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { DeletePlantButton } from "@/components/delete-plant-button";
@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { uploadPlantPhoto } from "@/app/actions/plants/upload-plant-photo";
 import { getPlantPhotos } from "@/app/actions/plants/get-plant-photos";
 import { setMainPhoto } from "@/app/actions/plants/set-main-photo";
+import { deletePlantPhoto } from "@/app/actions/plants/delete-plant-photo";
 import { toast } from "sonner";
 import { PlantCareHistoryContainer } from "./plant-care-history-container";
 
@@ -106,6 +107,23 @@ export function PlantDetail({ plant }: PlantDetailProps) {
     if (updatedPlant) {
       router.refresh(); // Refresh the page to show the new main photo
       toast.success("Main photo updated");
+    }
+  };
+
+  const handleDeletePhoto = async (photoId: string) => {
+    const { success, error } = await deletePlantPhoto(plant.id, photoId);
+    if (error) {
+      toast.error(error);
+      return;
+    }
+
+    if (success) {
+      setPhotos(photos.filter((p) => p.id !== photoId));
+      if (photos.find((p) => p.id === photoId)?.url === plant.mainPhotoUrl) {
+        // If we deleted the main photo, refresh to update the UI
+        router.refresh();
+      }
+      toast.success("Photo deleted successfully");
     }
   };
 
@@ -234,7 +252,7 @@ export function PlantDetail({ plant }: PlantDetailProps) {
                           fill
                           className="object-cover rounded-lg"
                         />
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                           <Button
                             variant="ghost"
                             size="icon"
@@ -246,6 +264,14 @@ export function PlantDetail({ plant }: PlantDetailProps) {
                             ) : (
                               <StarOff className="h-5 w-5" />
                             )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-white hover:text-white hover:bg-black/20"
+                            onClick={() => handleDeletePhoto(photo.id)}
+                          >
+                            <Trash2 className="h-5 w-5" />
                           </Button>
                         </div>
                       </div>

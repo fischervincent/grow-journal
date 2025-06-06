@@ -5,6 +5,7 @@ import { sql } from "drizzle-orm";
 export const plantPhotos = pgTable("plant_photos", {
   id: uuid('id').defaultRandom().primaryKey(),
   plantId: uuid('plant_id').notNull().references((): AnyPgColumn => plants.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references((): AnyPgColumn => users.id, { onDelete: 'cascade' }),
   url: text('url').notNull(),
   takenAt: timestamp('taken_at'),
   createdAt: timestamp('created_at').$defaultFn(() => new Date()).notNull(),

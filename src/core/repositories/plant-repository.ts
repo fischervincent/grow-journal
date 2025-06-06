@@ -11,6 +11,7 @@ export interface PlantRepository {
 
   // Photo related methods
   addPhoto(plantPhoto: { plantId: string, userId: string, url: string, takenAt?: Date }): Promise<PlantPhoto>;
+  getPhotoById(photoId: string, userId: string): Promise<PlantPhoto | null>;
   getPhotos(plantId: string, userId: string): Promise<PlantPhoto[]>;
   setMainPhoto(plantId: string, userId: string, photoId: string): Promise<PlantWithId>;
   deletePhoto(photoId: string, userId: string): Promise<void>;

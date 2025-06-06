@@ -113,13 +113,24 @@ export class DrizzlePlantRepository implements PlantRepository {
       .where(eq(plants.userId, userId));
   }
 
+  async getPhotoById(photoId: string, userId: string): Promise<PlantPhoto | null> {
+    const [photo] = await this.db.select()
+      .from(plantPhotos)
+      .where(and(
+        eq(plantPhotos.id, photoId),
+        eq(plantPhotos.userId, userId)
+      ))
+      .limit(1);
+    return photo ? mapPhotoFromDB(photo) : null;
+  }
+
   async addPhoto({ plantId, userId, url, takenAt }: { plantId: string, userId: string, url: string, takenAt?: Date }): Promise<PlantPhoto> {
     // First verify the plant belongs to the user
     const plant = await this.findById(plantId, userId);
     if (!plant) throw new Error("Plant not found");
 
     const [photo] = await this.db.insert(plantPhotos)
-      .values({ plantId, url, takenAt })
+      .values({ plantId, userId, url, takenAt })
       .returning();
 
     return mapPhotoFromDB(photo);
