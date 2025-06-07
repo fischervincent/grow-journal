@@ -66,7 +66,13 @@ export function PlantCard({
     >
       <Link href={`/plants/${slug}`}>
         <div className="relative aspect-square">
-          <Image src={image} alt={name} fill className="object-cover" />
+          <Image
+            src={image}
+            alt={name}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
         </div>
       </Link>
 
