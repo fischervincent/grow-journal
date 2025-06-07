@@ -4,7 +4,15 @@ import type React from "react"
 
 import { redirect, usePathname } from "next/navigation"
 import Link from "next/link"
-import { Home, User, ChevronDown, Settings, LogOut, Cog } from "lucide-react";
+import {
+  Home,
+  User,
+  ChevronDown,
+  Settings,
+  LogOut,
+  Cog,
+  MapPin,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -61,6 +69,12 @@ export function Navigation() {
               <Link href="/event-settings" className="flex items-center">
                 <Cog className="mr-2 h-4 w-4" />
                 Event Settings
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/location-settings" className="flex items-center">
+                <MapPin className="mr-2 h-4 w-4" />
+                Locations
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
