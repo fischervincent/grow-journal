@@ -3,13 +3,14 @@ import { PlantDetailContainer } from "@/components/plant-detail-container";
 import { notFound } from "next/navigation";
 
 interface PlantPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export default async function PlantPage({ params }: PlantPageProps) {
-  const result = await findPlantBySlug(params.slug);
+  const { slug } = await params;
+  const result = await findPlantBySlug(slug);
 
   if (!result.success || !result.data) {
     notFound();
