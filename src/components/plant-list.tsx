@@ -197,7 +197,7 @@ function PlantListContent({
         </div>
 
         <div className="relative flex-shrink-0">
-          <div className="overflow-x-auto flex gap-2 pb-2 pr-4 max-w-[calc(100vw-2rem)] sm:max-w-[400px] scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+          <div className="overflow-x-auto flex gap-2 pb-2 pr-4 max-w-[calc(100vw-2rem)] scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
             {sortableEventTypes.map((eventType) => (
               <Button
                 key={eventType.id}
@@ -245,7 +245,7 @@ function PlantListContent({
               </Button>
             ))}
           </div>
-          <div className="absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-2 w-8 pointer-events-none" />
         </div>
       </div>
 
