@@ -4,16 +4,7 @@ import type React from "react"
 
 import { redirect, usePathname } from "next/navigation"
 import Link from "next/link"
-import {
-  Bell,
-  CalendarDays,
-  Home,
-  User,
-  ChevronDown,
-  Settings,
-  LogOut,
-  Cog,
-} from "lucide-react";
+import { Home, User, ChevronDown, Settings, LogOut, Cog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
