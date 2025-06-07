@@ -128,7 +128,7 @@ export function PlantDetail({
         </Button>
       </div>
 
-      <Card className="bg-background">
+      <Card hasPaddingTop={false} className="bg-background">
         <CardContent className="p-0">
           <div className="relative aspect-square w-full overflow-hidden rounded-t-lg bg-muted">
             {plant.mainPhotoUrl ? (

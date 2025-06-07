@@ -60,7 +60,10 @@ export function PlantCard({
     };
 
   return (
-    <Card className="overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 py-0 h-full">
+    <Card
+      hasPaddingTop={false}
+      className="overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 py-0 h-full"
+    >
       <Link href={`/plants/${slug}`}>
         <div className="relative aspect-square">
           <Image src={image} alt={name} fill className="object-cover" />
