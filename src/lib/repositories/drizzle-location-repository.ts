@@ -56,7 +56,7 @@ export class DrizzleLocationRepository implements LocationRepository {
 
       return this.mapLocationFromDB(result);
     } catch (error) {
-      if (error instanceof PostgresError && error.code === UNIQUE_VIOLATION_CODE) {
+      if (error instanceof DatabaseError && error.code === UNIQUE_VIOLATION_CODE) {
         throw new Error(`Location "${data.name}" already exists`);
       }
       throw error;
