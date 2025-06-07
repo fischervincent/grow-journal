@@ -35,8 +35,6 @@ export function EditPlantDialog({
   locations,
   plantSlug,
 }: EditPlantDialogProps) {
-  console.log("currentLocationId", currentLocationId);
-  console.log("locations", locations);
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: currentName,

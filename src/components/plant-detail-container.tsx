@@ -14,7 +14,6 @@ export async function PlantDetailContainer({
     getPlantPhotos(plant.id),
     getLocations(),
   ]);
-  console.log("locationsResult", locationsResult);
   return (
     <PlantDetail
       plant={plant}
