@@ -48,7 +48,7 @@ export const NewPlantSchema = z.object({
   name: z.string()
     .min(1, { message: PLANT_CREATION_ERRORS.EmptyName })
     .max(MAX_NAME_LENGTH, { message: PLANT_CREATION_ERRORS.NameTooLong }),
-  speciesName: z.string()
+  species: z.string()
     .min(1, { message: PLANT_CREATION_ERRORS.EmptySpecies })
     .max(MAX_NAME_LENGTH, { message: PLANT_CREATION_ERRORS.SpeciesTooLong })
     .optional()
@@ -79,7 +79,7 @@ export const createNewPlant = (newPlantInput: {
     {
       name: parseResult.data.name,
       slug: generateSlug(parseResult.data.name),
-      species: parseResult.data.speciesName,
+      species: parseResult.data.species,
       lastDateByEvents: {},
     },
     undefined,
