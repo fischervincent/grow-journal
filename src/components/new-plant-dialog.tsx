@@ -51,7 +51,6 @@ function NewPlantDialogContent({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const [createdPlant, errors] = await createPlant({
       name: formData.name,
       species: formData.isSpeciesName
