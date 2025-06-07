@@ -176,7 +176,7 @@ export function PlantDetail({ plant }: PlantDetailProps) {
       </Card>
 
       <div className="mt-6">
-        <Tabs defaultValue="photos" className="w-full">
+        <Tabs defaultValue="care" className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-card">
             <TabsTrigger value="care">Care History</TabsTrigger>
             <TabsTrigger value="photos">Photos</TabsTrigger>
