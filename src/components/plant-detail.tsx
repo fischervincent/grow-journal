@@ -3,42 +3,44 @@
 import { PlantPhoto, PlantWithPhotoAndId } from "@/core/domain/plant";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { ArrowLeft, Check, Camera, Star, StarOff, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  Camera,
+  Star,
+  StarOff,
+  Trash2,
+  MapPin,
+} from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { DeletePlantButton } from "@/components/delete-plant-button";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { uploadPlantPhoto } from "@/app/actions/plants/upload-plant-photo";
-import { getPlantPhotos } from "@/app/actions/plants/get-plant-photos";
 import { setMainPhoto } from "@/app/actions/plants/set-main-photo";
 import { deletePlantPhoto } from "@/app/actions/plants/delete-plant-photo";
 import { toast } from "sonner";
 import { PlantCareHistoryContainer } from "./plant-care-history-container";
 import { ButtonWithConfirmation } from "@/components/ui/button-with-confirmation";
-import { LocationField } from "@/components/location-field";
-import { updatePlantLocation } from "@/app/actions/plants/update-plant-location";
+import { EditPlantDialog } from "./edit-plant-dialog";
 
-type PlantDetailProps = {
+interface PlantDetailProps {
   plant: PlantWithPhotoAndId;
-};
+  initialPhotos: PlantPhoto[];
+  locations: Array<{ id: string; name: string }>;
+}
 
-export function PlantDetail({ plant }: PlantDetailProps) {
+export function PlantDetail({
+  plant,
+  initialPhotos,
+  locations,
+}: PlantDetailProps) {
   const router = useRouter();
-  const [photos, setPhotos] = useState<PlantPhoto[]>([]);
+  const [photos, setPhotos] = useState<PlantPhoto[]>(initialPhotos);
   const [isUploading, setIsUploading] = useState(false);
-
-  useEffect(() => {
-    const loadPhotos = async () => {
-      const result = await getPlantPhotos(plant.id);
-      if (!result.error) {
-        setPhotos(result.photos);
-      }
-    };
-    loadPhotos();
-  }, [plant.id]);
 
   const handleBack = () => {
     router.back();
@@ -46,15 +48,6 @@ export function PlantDetail({ plant }: PlantDetailProps) {
 
   const handleDeleteSuccess = () => {
     router.push("/plants");
-  };
-
-  const handleLocationChange = async (locationId: string | undefined) => {
-    const result = await updatePlantLocation(plant.id, locationId);
-    if (result.success) {
-      router.refresh();
-    } else {
-      toast.error(result.error || "Failed to update location");
-    }
   };
 
   const handlePhotoUpload = async (
@@ -158,19 +151,39 @@ export function PlantDetail({ plant }: PlantDetailProps) {
             )}
           </div>
           <div className="p-4 bg-card">
-            <div className="flex items-center justify-between mb-2">
-              <h1 className="text-2xl font-semibold">{plant.name}</h1>
-              <DeletePlantButton
-                plantId={plant.id}
-                plantName={plant.name}
-                onDeleteSuccess={handleDeleteSuccess}
-              />
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-2xl font-semibold truncate">
+                  {plant.name}
+                </h1>
+                {plant.species && (
+                  <p className="text-sm text-muted-foreground">
+                    {plant.species}
+                  </p>
+                )}
+                {plant.location && (
+                  <div className="flex items-center gap-1.5 mt-2 text-sm text-muted-foreground">
+                    <MapPin className="h-3.5 w-3.5" />
+                    <span>{plant.location}</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <EditPlantDialog
+                  plantId={plant.id}
+                  currentName={plant.name}
+                  currentSpecies={plant.species}
+                  currentLocationId={plant.locationId}
+                  locations={locations}
+                  plantSlug={plant.slug}
+                />
+                <DeletePlantButton
+                  plantId={plant.id}
+                  plantName={plant.name}
+                  onDeleteSuccess={handleDeleteSuccess}
+                />
+              </div>
             </div>
-            <LocationField
-              locationName={plant.location}
-              locationId={plant.locationId}
-              onLocationChange={handleLocationChange}
-            />
           </div>
         </CardContent>
       </Card>

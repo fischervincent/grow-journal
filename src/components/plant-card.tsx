@@ -80,7 +80,7 @@ export function PlantCard({
         )}
       </CardContent>
 
-      <CardFooter className="px-4 pt-0 flex flex-col mt-auto gap-2">
+      <CardFooter className="px-4 pt-0 flex flex-col mt-auto gap-2 pb-2">
         {quickAccessEvents.map((plantEventType) => (
           <div
             className="flex items-center justify-between mb-1 pb-1 w-full"

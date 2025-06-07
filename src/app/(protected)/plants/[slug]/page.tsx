@@ -1,20 +1,19 @@
 import { findPlantBySlug } from "@/app/actions/plants/find-plant-by-slug";
-import { PlantDetail } from "@/components/plant-detail";
+import { PlantDetailContainer } from "@/components/plant-detail-container";
 import { notFound } from "next/navigation";
 
 interface PlantPageProps {
-  params: Promise<{
+  params: {
     slug: string;
-  }>;
+  };
 }
 
 export default async function PlantPage({ params }: PlantPageProps) {
-  const slug = (await params).slug;
-  const result = await findPlantBySlug(slug);
+  const result = await findPlantBySlug(params.slug);
 
-  if (!result.data) {
+  if (!result.success || !result.data) {
     notFound();
   }
 
-  return <PlantDetail plant={result.data} />;
+  return <PlantDetailContainer plant={result.data} />;
 }
