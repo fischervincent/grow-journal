@@ -22,6 +22,7 @@ import { ButtonWithConfirmation } from "./ui/button-with-confirmation";
 interface PlantEventsAsListProps {
   plantId: string;
   eventTypes: PlantEventTypeWithId[];
+  updateCount?: number;
 }
 
 const ALL_EVENTS = "all";
@@ -29,6 +30,7 @@ const ALL_EVENTS = "all";
 export function PlantEventsAsList({
   plantId,
   eventTypes,
+  updateCount = 0,
 }: PlantEventsAsListProps) {
   const [selectedEventType, setSelectedEventType] =
     useState<string>(ALL_EVENTS);
@@ -50,7 +52,7 @@ export function PlantEventsAsList({
       setIsLoadingEvents(false);
     };
     loadEvents();
-  }, [plantId, selectedEventType]);
+  }, [plantId, selectedEventType, updateCount]);
 
   const handleDeleteEvent = async (eventId: string) => {
     const { success, error } = await deletePlantEvent(eventId);

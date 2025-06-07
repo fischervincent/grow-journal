@@ -30,6 +30,7 @@ export function PlantCareHistoryContainer({
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEventType, setSelectedEventType] = useState<string>("");
   const [comment, setComment] = useState("");
+  const [updateCount, setUpdateCount] = useState(0);
 
   useEffect(() => {
     const loadEventTypes = async () => {
@@ -60,6 +61,7 @@ export function PlantCareHistoryContainer({
       toast.success("Event recorded");
       setSelectedEventType("");
       setComment("");
+      setUpdateCount((c) => c + 1); // Trigger re-render to refresh history. I know...
     } catch {
       toast.error("Failed to record event");
     }
@@ -119,7 +121,11 @@ export function PlantCareHistoryContainer({
         </div>
       </Card>
 
-      <PlantCareHistory plantId={plantId} eventTypes={eventTypes} />
+      <PlantCareHistory
+        plantId={plantId}
+        eventTypes={eventTypes}
+        updateCount={updateCount}
+      />
     </div>
   );
 }

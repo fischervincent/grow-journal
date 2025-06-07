@@ -50,7 +50,6 @@ export class DrizzlePlantEventRepository implements PlantEventRepository {
       .from(plantEvents)
       .where(and(eq(plantEvents.plantId, plantId), eq(plantEvents.userId, userId)))
       .orderBy(desc(plantEvents.plantEventDateTime));
-    console.log(eventsInDB);
 
     return eventsInDB.map(mapPlantEventFromDB);
   }
@@ -71,7 +70,7 @@ export class DrizzlePlantEventRepository implements PlantEventRepository {
         )
       )
       .orderBy(desc(plantEvents.plantEventDateTime));
-    console.log(eventsInDB);
+
     return eventsInDB.map(mapPlantEventFromDB);
   }
 } 

@@ -17,7 +17,6 @@ export async function createPlant(input: CreatePlantInput) {
   const session = await auth.api.getSession({
     headers: await headers()
   })
-  console.log({ input })
   const userId = session?.user?.id;
   if (!userId) {
     return [null, 'Unauthorized'] as const // for now let's not handle errors in form

@@ -31,6 +31,7 @@ import {
 interface PlantEventsAsTimelineProps {
   plantId: string;
   eventTypes: (PlantEventType & { id: string })[];
+  updateCount?: number;
 }
 
 const ALL_EVENTS = "all";
@@ -74,6 +75,7 @@ interface TooltipProps {
 export function PlantEventsAsTimeline({
   plantId,
   eventTypes,
+  updateCount = 0,
 }: PlantEventsAsTimelineProps) {
   const [selectedEventType, setSelectedEventType] =
     useState<string>(ALL_EVENTS);
@@ -101,7 +103,7 @@ export function PlantEventsAsTimeline({
       setIsLoadingEvents(false);
     };
     loadEvents();
-  }, [plantId, selectedEventType]);
+  }, [plantId, selectedEventType, updateCount]);
 
   const timelineData = useMemo(() => {
     const now = new Date();

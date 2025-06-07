@@ -21,7 +21,7 @@ export async function createPlantEventType(input: {
     throw new Error("Not authenticated");
   }
   const [newPlantEventType, errors] = createNewPlantEventType(input);
-  console.log("err", errors);
+  console.error("err", errors);
 
   if (errors) {
     throw new Error(errors.join(", ") || "Failed to create plant event");

@@ -9,6 +9,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 interface PlantCareHistoryProps {
   plantId: string;
   eventTypes: (PlantEventType & { id: string })[];
+  updateCount?: number;
 }
 
 type ViewMode = "list" | "timeline";
@@ -16,6 +17,7 @@ type ViewMode = "list" | "timeline";
 export function PlantCareHistory({
   plantId,
   eventTypes,
+  updateCount = 0,
 }: PlantCareHistoryProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("list");
 
@@ -34,9 +36,17 @@ export function PlantCareHistory({
       </div>
 
       {viewMode === "list" ? (
-        <PlantEventsAsList plantId={plantId} eventTypes={eventTypes} />
+        <PlantEventsAsList
+          plantId={plantId}
+          eventTypes={eventTypes}
+          updateCount={updateCount}
+        />
       ) : (
-        <PlantEventsAsTimeline plantId={plantId} eventTypes={eventTypes} />
+        <PlantEventsAsTimeline
+          plantId={plantId}
+          eventTypes={eventTypes}
+          updateCount={updateCount}
+        />
       )}
     </div>
   );

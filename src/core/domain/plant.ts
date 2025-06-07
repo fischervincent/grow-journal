@@ -69,7 +69,7 @@ export const createNewPlant = (newPlantInput: {
       if (Object.values(PLANT_CREATION_ERRORS).includes(message)) {
         errors.push(message)
       } else {
-        console.log("Unknown error at domain New Plant Creation", err.message)
+        console.error("Unknown error at domain New Plant Creation", err.message)
         errors.push(PLANT_CREATION_ERRORS.UnknownError)
       }
     }

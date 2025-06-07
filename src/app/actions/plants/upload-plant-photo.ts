@@ -64,7 +64,6 @@ export async function uploadPlantPhoto(
     // If this is the first photo, set it as the main photo
     const plant = await plantRepository.findById(plantId, userId);
     if (plant && !plant.mainPhotoUrl) {
-      console.log("Setting main photo", plantId, userId, photo.id);
       await plantRepository.setMainPhoto(plantId, userId, photo.id);
     }
     revalidatePath(`/plants/${plantId}`)
