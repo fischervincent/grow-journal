@@ -45,18 +45,6 @@ export function Navigation() {
             label="Plants"
             active={pathname === "/plants"}
           />
-          <NavItem
-            href="/events"
-            icon={<CalendarDays className="h-5 w-5" />}
-            label="Events"
-            active={pathname === "/events"}
-          />
-          <NavItem
-            href="/notifications"
-            icon={<Bell className="h-5 w-5" />}
-            label="Notifications"
-            active={pathname === "/notifications"}
-          />
         </div>
 
         {/* Profile Dropdown */}
@@ -113,18 +101,6 @@ export function Navigation() {
           icon={<Home className="h-6 w-6" />}
           label="Plants"
           active={pathname === "/plants"}
-        />
-        <MobileNavItem
-          href="/events"
-          icon={<CalendarDays className="h-6 w-6" />}
-          label="Events"
-          active={pathname === "/events"}
-        />
-        <MobileNavItem
-          href="/notifications"
-          icon={<Bell className="h-6 w-6" />}
-          label="Notifications"
-          active={pathname === "/notifications"}
         />
         <MobileNavItem
           href="/account"
