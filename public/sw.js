@@ -28,8 +28,10 @@ self.addEventListener('push', function (event) {
       console.log('Notification options:', options);
 
       event.waitUntil(
-        self.registration.showNotification(data.title, options)
-          .then(() => console.log('Notification shown successfully'))
+        self.registration.showNotification("Test Local Notification", {
+          body: "This is a local test notification",
+          icon: "/icon-192.png",
+        }).then(() => console.log('Notification shown successfully'))
           .catch(err => console.error('Error showing notification:', err))
       );
     } catch (error) {
