@@ -94,6 +94,9 @@ export async function sendNotification(message: string) {
           title: 'Grow Journal',
           body: message,
           icon: '/icon-192.png',
+          data: {
+            url: 'https://grow-journal-tau.vercel.app/plants'
+          }
         })
       )
       results.push({ success: true, subscriptionId: subscription.id })

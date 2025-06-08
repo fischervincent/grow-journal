@@ -63,8 +63,25 @@ function PushNotificationManager() {
 
   async function sendTestNotification() {
     if (subscription) {
-      await sendNotification(message);
-      setMessage("");
+      try {
+        console.log("Sending notification with message:", message);
+        const result = await sendNotification(message);
+        console.log("Notification result:", result);
+        setMessage("");
+      } catch (error) {
+        console.error("Error sending notification:", error);
+      }
+    }
+  }
+
+  async function testLocalNotification() {
+    // Test if notifications work locally (bypass server)
+    if ("serviceWorker" in navigator) {
+      const registration = await navigator.serviceWorker.ready;
+      registration.showNotification("Test Local Notification", {
+        body: "This is a local test notification",
+        icon: "/icon-192.png",
+      });
     }
   }
 
@@ -86,6 +103,9 @@ function PushNotificationManager() {
             onChange={(e) => setMessage(e.target.value)}
           />
           <button onClick={sendTestNotification}>Send Test</button>
+          <button onClick={testLocalNotification}>
+            Test Local Notification
+          </button>
         </>
       ) : (
         <>
