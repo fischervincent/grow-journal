@@ -108,6 +108,7 @@ export default function AccountPage() {
               </Link>
             </CardContent>
           </Card>
+          <Link href="/notif">Manage Push Notifications</Link>
         </div>
       </ScrollArea>
     </div>
