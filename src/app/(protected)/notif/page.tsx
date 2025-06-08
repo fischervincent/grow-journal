@@ -25,12 +25,29 @@ function PushNotificationManager() {
     null
   );
   const [message, setMessage] = useState("");
+  const [notificationPermission, setNotificationPermission] =
+    useState<NotificationPermission>("default");
 
   useEffect(() => {
     if ("serviceWorker" in navigator && "PushManager" in window) {
       setIsSupported(true);
       registerServiceWorker();
     }
+
+    // Check notification permission
+    if ("Notification" in window) {
+      setNotificationPermission(Notification.permission);
+    }
+
+    // iOS PWA debugging
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isInStandaloneMode = window.matchMedia(
+      "(display-mode: standalone)"
+    ).matches;
+    console.log("iOS device:", isIOS);
+    console.log("Standalone mode (PWA):", isInStandaloneMode);
+    console.log("Service Worker supported:", "serviceWorker" in navigator);
+    console.log("Push Manager supported:", "PushManager" in window);
   }, []);
 
   async function registerServiceWorker() {
@@ -92,6 +109,7 @@ function PushNotificationManager() {
   return (
     <div>
       <h3>Push Notifications</h3>
+      <p>Notification Permission: {notificationPermission}</p>
       {subscription ? (
         <>
           <p>You are subscribed to push notifications.</p>

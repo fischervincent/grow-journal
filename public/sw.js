@@ -1,5 +1,7 @@
 self.addEventListener('push', function (event) {
   console.log('Push event received:', event);
+  console.log('User agent:', navigator.userAgent);
+  console.log('Is iOS:', /iPad|iPhone|iPod/.test(navigator.userAgent));
 
   if (event.data) {
     console.log('Push event has data');
@@ -11,12 +13,16 @@ self.addEventListener('push', function (event) {
         body: data.body,
         icon: data.icon || '/icon-192.png',
         badge: '/badge-72.png',
-        vibrate: [100, 50, 100],
+        // Remove vibrate for iOS compatibility
+        ...(!/iPad|iPhone|iPod/.test(navigator.userAgent) && { vibrate: [100, 50, 100] }),
         data: {
           dateOfArrival: Date.now(),
           primaryKey: '2',
           url: data.data?.url
         },
+        // Add iOS-specific options
+        requireInteraction: false,
+        silent: false,
       }
 
       console.log('Notification options:', options);
