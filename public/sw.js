@@ -1,53 +1,30 @@
+
+
 self.addEventListener('push', function (event) {
-  console.log('Push event received:', event);
-  console.log('User agent:', navigator.userAgent);
-  console.log('Is iOS:', /iPad|iPhone|iPod/.test(navigator.userAgent));
-
   if (event.data) {
-    console.log('Push event has data');
-    try {
-      const data = event.data.json();
-      console.log('Parsed push data:', data);
-
-      const options = {
-        body: data.body,
-        icon: data.icon || '/icon-192.png',
-        badge: '/badge-72.png',
-        // Remove vibrate for iOS compatibility
-        ...(!/iPad|iPhone|iPod/.test(navigator.userAgent) && { vibrate: [100, 50, 100] }),
-        data: {
-          dateOfArrival: Date.now(),
-          primaryKey: '2',
-          url: data.data?.url
-        },
-        // Add iOS-specific options
-        requireInteraction: false,
-        silent: false,
-      }
-
-      console.log('Notification options:', options);
-
-      event.waitUntil(
-        self.registration.showNotification("Test Local Notification", {
-          body: "This is a local test notification",
-          icon: "/icon-192.png",
-        }).then(() => console.log('Notification shown successfully'))
-          .catch(err => console.error('Error showing notification:', err))
-      );
-    } catch (error) {
-      console.error('Error parsing push data:', error);
-    }
-  } else {
-    console.log('Push event has no data');
+    const data = event.data.json();
+    const { title, body, primaryKey, badge, url } = data;
+    const options = {
+      body,
+      icon: '/icon-192.png',
+      badge: badge || '/badge-72.png',
+      vibrate: [100, 50, 100],
+      data: {
+        dateOfArrival: Date.now(),
+        primaryKey,
+        url,
+      },
+    };
+    event.waitUntil(self.registration.showNotification(title, options));
   }
-})
+});
 
 self.addEventListener('notificationclick', function (event) {
-  console.log('Notification click received: ', event.notification?.data)
+  const data = event.notification.data;
+  const { url } = data;
+  event.notification.close();
 
-  event.notification.close()
-
-  const redirectUrl = event.notification.data?.url || 'https://grow-journal-tau.vercel.com'
-
-  event.waitUntil(clients.openWindow(redirectUrl))
-})
+  if (url) {
+    event.waitUntil(clients.openWindow(url));
+  }
+});

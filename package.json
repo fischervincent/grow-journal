@@ -28,6 +28,7 @@
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "drizzle-orm": "^0.44.1",
+    "js-cookie": "^3.0.5",
     "lodash": "^4.17.21",
     "lucide-react": "^0.511.0",
     "next": "15.3.2",
@@ -45,6 +46,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@types/js-cookie": "^3.0.6",
     "@types/node": "^20",
     "@types/pg": "^8.15.2",
     "@types/react": "^19",

@@ -8,6 +8,7 @@ export const notificationSubscriptions = pgTable("notification_subscriptions", {
   p256dh: text('p256dh').notNull(),
   auth: text('auth').notNull(),
   subscription: jsonb('subscription').notNull(), // Store the full subscription object
+  deviceId: text('device_id').notNull(),
   createdAt: timestamp('created_at').$defaultFn(() => new Date()).notNull(),
   updatedAt: timestamp('updated_at').$defaultFn(() => new Date()).notNull(),
 }, (table) => {

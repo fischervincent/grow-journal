@@ -22,7 +22,7 @@ export class DrizzleNotificationSubscriptionRepository implements NotificationSu
 
   async create(subscription: NewNotificationSubscription): Promise<NotificationSubscription> {
     const [createdSubscription] = await this.db.insert(notificationSubscriptions)
-      .values(subscription)
+      .values({ ...subscription })
       .returning();
     return mapSubscriptionFromDB(createdSubscription);
   }
@@ -45,13 +45,22 @@ export class DrizzleNotificationSubscriptionRepository implements NotificationSu
     return subscription ? mapSubscriptionFromDB(subscription) : null;
   }
 
-  async findByUserIdAndEndpoint(userId: string, endpoint: string): Promise<NotificationSubscription | null> {
+  async findByUserIdAndDevice(userId: string, deviceId: string): Promise<NotificationSubscription | null> {
+    const [subscription] = await this.db.select()
+      .from(notificationSubscriptions)
+      .where(and(eq(notificationSubscriptions.userId, userId), eq(notificationSubscriptions.deviceId, deviceId)))
+      .limit(1);
+    return subscription ? mapSubscriptionFromDB(subscription) : null;
+  }
+
+  async findByUserIdAndEndpointAndDevice(userId: string, endpoint: string, deviceId: string): Promise<NotificationSubscription | null> {
     const [subscription] = await this.db.select()
       .from(notificationSubscriptions)
       .where(
         and(
           eq(notificationSubscriptions.userId, userId),
-          eq(notificationSubscriptions.endpoint, endpoint)
+          eq(notificationSubscriptions.endpoint, endpoint),
+          eq(notificationSubscriptions.deviceId, deviceId)
         )
       )
       .limit(1);
@@ -64,17 +73,42 @@ export class DrizzleNotificationSubscriptionRepository implements NotificationSu
       .where(eq(notificationSubscriptions.userId, userId));
   }
 
-  async deleteByEndpoint(endpoint: string): Promise<void> {
-    await this.db.delete(notificationSubscriptions)
-      .where(eq(notificationSubscriptions.endpoint, endpoint));
-  }
-
-  async deleteByUserIdAndEndpoint(userId: string, endpoint: string): Promise<void> {
+  async deleteByUserAndDevice(userId: string, deviceId: string): Promise<void> {
     await this.db.delete(notificationSubscriptions)
       .where(
         and(
           eq(notificationSubscriptions.userId, userId),
-          eq(notificationSubscriptions.endpoint, endpoint)
+          eq(notificationSubscriptions.deviceId, deviceId)
+        )
+      );
+  }
+
+  async deleteByEndpointAndDevice(endpoint: string, deviceId: string): Promise<void> {
+    await this.db.delete(notificationSubscriptions)
+      .where(
+        and(
+          eq(notificationSubscriptions.endpoint, endpoint),
+          eq(notificationSubscriptions.deviceId, deviceId)
+        )
+      );
+  }
+
+  async deleteByEndpoint(endpoint: string): Promise<void> {
+    await this.db.delete(notificationSubscriptions)
+      .where(
+        and(
+          eq(notificationSubscriptions.endpoint, endpoint),
+        )
+      );
+  }
+
+  async deleteByUserIdAndEndpointAndDevice(userId: string, endpoint: string, deviceId: string): Promise<void> {
+    await this.db.delete(notificationSubscriptions)
+      .where(
+        and(
+          eq(notificationSubscriptions.userId, userId),
+          eq(notificationSubscriptions.endpoint, endpoint),
+          eq(notificationSubscriptions.deviceId, deviceId)
         )
       );
   }

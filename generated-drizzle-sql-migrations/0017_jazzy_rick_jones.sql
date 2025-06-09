@@ -1,0 +1,1 @@
+ALTER TABLE "notification_subscriptions" ADD COLUMN "device_id" text NOT NULL;

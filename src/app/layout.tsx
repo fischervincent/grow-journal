@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "sonner";
+import { PushNotificationsProvider } from "@/lib/notification/push/use-notification";
 
 export const metadata: Metadata = {
   title: "Plant Care Assistant",
@@ -15,8 +16,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {children}
-        <Toaster richColors position="bottom-right" />
+        <PushNotificationsProvider>
+          {children}
+          <Toaster richColors position="bottom-right" />
+        </PushNotificationsProvider>
       </body>
     </html>
   );

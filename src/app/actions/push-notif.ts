@@ -1,17 +1,17 @@
 'use server'
 
-import webpush, { PushSubscription } from 'web-push'
+import webpush, { PushSubscription } from 'web-push';
 import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
 import { createNotificationSubscriptionRepository } from '@/lib/repositories/notification-subscription-repository-factory'
 
-webpush.setVapidDetails(
-  `mailto:${process.env.EMAIL_FROM}`,
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-)
+// webpush.setVapidDetails(
+//   `mailto:${process.env.EMAIL_FROM}`,
+//   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+//   process.env.VAPID_PRIVATE_KEY!
+// )
 
-export async function subscribeUser(sub: PushSubscription) {
+export async function subscribeUser({ sub, deviceId }: { sub: PushSubscription, deviceId: string }) {
   const session = await auth.api.getSession({
     headers: await headers()
   })
@@ -23,14 +23,14 @@ export async function subscribeUser(sub: PushSubscription) {
   const repository = createNotificationSubscriptionRepository()
 
   // Check if subscription already exists for this user and endpoint
-  const existingSubscription = await repository.findByUserIdAndEndpoint(
+  const existingSubscription = await repository.findByUserIdAndEndpointAndDevice(
     session.user.id,
+    deviceId,
     sub.endpoint
   )
 
   if (existingSubscription) {
-    // Update existing subscription
-    await repository.deleteByUserIdAndEndpoint(session.user.id, sub.endpoint)
+    await repository.deleteByUserIdAndEndpointAndDevice(session.user.id, sub.endpoint, deviceId)
   }
 
   // Create new subscription
@@ -46,12 +46,13 @@ export async function subscribeUser(sub: PushSubscription) {
         auth: sub.keys.auth,
       }
     },
+    deviceId
   })
 
   return { success: true }
 }
 
-export async function unsubscribeUser() {
+export async function unsubscribeUser(deviceId: string) {
   const session = await auth.api.getSession({
     headers: await headers()
   })
@@ -63,12 +64,27 @@ export async function unsubscribeUser() {
   const repository = createNotificationSubscriptionRepository()
 
   // Remove all subscriptions for this user
-  await repository.deleteByUserId(session.user.id)
+  await repository.deleteByUserAndDevice(session.user.id, deviceId)
 
   return { success: true }
 }
 
-export async function sendNotification(message: string) {
+export async function checkSubscription(deviceId: string) {
+  const session = await auth.api.getSession({
+    headers: await headers()
+  })
+
+  if (!session?.user) {
+    throw new Error('Not authenticated')
+  }
+
+  const repository = createNotificationSubscriptionRepository()
+  const subscription = await repository.findByUserIdAndDevice(session.user.id, deviceId)
+
+  return { success: !!subscription }
+}
+
+export async function sendPushNotification(message: string) {
   const session = await auth.api.getSession({
     headers: await headers()
   })
@@ -80,6 +96,13 @@ export async function sendNotification(message: string) {
   const repository = createNotificationSubscriptionRepository()
   const subscriptions = await repository.findByUserId(session.user.id)
 
+  webpush.setVapidDetails(
+    `mailto:${process.env.EMAIL_FROM}`,
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!
+  )
+
+
   if (subscriptions.length === 0) {
     throw new Error('No subscriptions available')
   }
@@ -89,14 +112,13 @@ export async function sendNotification(message: string) {
   for (const subscription of subscriptions) {
     try {
       await webpush.sendNotification(
-        subscription.subscription as PushSubscription,
+        subscription.subscription,
         JSON.stringify({
           title: 'Grow Journal',
           body: message,
-          icon: '/icon-192.png',
-          data: {
-            url: 'https://grow-journal-tau.vercel.app/plants'
-          }
+          // icon: '/icon-192.png',
+          badge: '/badge-72.png',
+          url: 'https://grow-journal-tau.vercel.app/plants'
         })
       )
       results.push({ success: true, subscriptionId: subscription.id })

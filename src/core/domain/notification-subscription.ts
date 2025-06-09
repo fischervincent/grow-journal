@@ -24,4 +24,5 @@ export interface NewNotificationSubscription {
   p256dh: string;
   auth: string;
   subscription: BrowserPushSubscription;
+  deviceId: string;
 } 
