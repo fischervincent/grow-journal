@@ -6,8 +6,8 @@ self.addEventListener('push', function (event) {
     const { title, body, primaryKey, badge, url } = data;
     const options = {
       body,
-      icon: '/icon-192.png',
-      badge: badge || '/badge-72.png',
+      icon: '/android-chrome-192x192.png',
+      badge: badge || '/push-badge.png',
       vibrate: [100, 50, 100],
       data: {
         dateOfArrival: Date.now(),
