@@ -117,7 +117,7 @@ export async function sendPushNotification(message: string) {
           title: 'Grow Journal',
           body: message,
           // icon: '/icon-192.png',
-          badge: '/badge-72.png',
+          // badge: '/badge-72.png',
           url: 'https://grow-journal-tau.vercel.app/plants'
         })
       )
