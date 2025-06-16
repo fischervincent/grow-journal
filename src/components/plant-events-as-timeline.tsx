@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { PlantEventType } from "@/core/domain/plant-event-type";
 import { PlantEventWithId } from "@/core/domain/plant-event";
-import { getPlantEvents } from "@/app/actions/plants/get-plant-events";
+import { getPlantEvents } from "@/app/server-functions/plants/get-plant-events";
 import {
   format,
   subMonths,
@@ -91,7 +91,7 @@ export function PlantEventsAsTimeline({
   useEffect(() => {
     const loadEvents = async () => {
       setIsLoadingEvents(true);
-      const { plantEvents, error } = await getPlantEvents(
+      const [plantEvents, error] = await getPlantEvents(
         plantId,
         selectedEventType === ALL_EVENTS ? undefined : selectedEventType
       );

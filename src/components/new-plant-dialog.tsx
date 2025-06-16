@@ -12,11 +12,11 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { createPlant } from "@/app/actions/plants/create-plant";
+import { submitPlantForm } from "@/app/server-functions/plants/create-plant";
 import { useRouter } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
-import { getLocations } from "@/app/actions/plants/get-locations";
-import { addLocation } from "@/app/actions/plants/add-location";
+import { getLocations } from "@/app/server-functions/plants/get-locations";
+import { submitNewLocation } from "@/app/server-functions/plants/add-location";
 import { toast } from "sonner";
 import { LocationInput } from "./location-input";
 
@@ -51,7 +51,7 @@ function NewPlantDialogContent({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const [createdPlant, errors] = await createPlant({
+    const [createdPlant, errors] = await submitPlantForm({
       name: formData.name,
       species: formData.isSpeciesName
         ? formData.name
@@ -165,21 +165,23 @@ export function NewPlantDialog({ onPlantCreated }: NewPlantDialogProps) {
 
   useEffect(() => {
     const loadLocations = async () => {
-      const locationsList = await getLocations();
-      setLocations(locationsList);
+      const [locationsList, err] = await getLocations();
+      if (!err) {
+        setLocations([...locationsList]);
+      }
     };
     loadLocations();
   }, []);
 
   const handleAddLocation = async (name: string) => {
-    const result = await addLocation(name);
-    if (result.success && result.location) {
-      const newLocation = result.location;
+    const [location, error] = await submitNewLocation({ name });
+    if (location) {
+      const newLocation = location;
       setLocations([...locations, newLocation]);
       toast.success("Location added successfully");
       return newLocation;
     } else {
-      toast.error("Failed to add location");
+      toast.error(error || "Failed to add location");
       return undefined;
     }
   };

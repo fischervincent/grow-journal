@@ -1,7 +1,7 @@
-import { findPlantsByUser } from "@/app/actions/plants/find-plants-by-user";
-import { getQuickAccessEventTypes } from "@/app/actions/plantEventTypes/get-quick-access-event-types";
+import { findPlantsByUser } from "@/app/server-functions/plants/find-plants-by-user";
+import { getQuickAccessEventTypes } from "@/app/server-functions/plantEventTypes/get-quick-access-event-types";
 import PlantList from "./plant-list";
-import { getSortableEventTypesByUser } from "@/app/actions/plantEventTypes/get-sortable-event-types";
+import { getSortableEventTypesByUser } from "@/app/server-functions/plantEventTypes/get-sortable-event-types";
 import { Suspense } from "react";
 
 function PlantListLoading() {
@@ -13,9 +13,9 @@ function PlantListLoading() {
 }
 
 async function PlantListContent() {
-  const { data: plants } = await findPlantsByUser();
-  const quickAccessEvents = await getQuickAccessEventTypes();
-  const sortableEvents = await getSortableEventTypesByUser();
+  const [plants] = await findPlantsByUser();
+  const [quickAccessEvents] = await getQuickAccessEventTypes();
+  const [sortableEvents] = await getSortableEventTypesByUser();
 
   if (!plants) {
     return <div>No plants found</div>;

@@ -1,10 +1,10 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { getLocations } from "@/app/actions/plants/get-locations";
+import { getLocations } from "@/app/server-functions/plants/get-locations";
 import { LocationSettingsContainer } from "@/components/location-settings-container";
 
 export default async function LocationSettingsPage() {
-  const locations = await getLocations();
+  const [locations] = await getLocations();
 
   return (
     <div className="container mx-auto py-8 px-4">

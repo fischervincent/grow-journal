@@ -5,9 +5,9 @@ import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
 import { Plus, Trash2, Check, X } from "lucide-react";
-import { addLocation } from "@/app/actions/plants/add-location";
-import { updateLocation } from "@/app/actions/plants/update-location";
-import { deleteLocation } from "@/app/actions/plants/delete-location";
+import { submitNewLocation } from "@/app/server-functions/plants/add-location";
+import { submitLocationUpdate } from "@/app/server-functions/plants/update-location";
+import { submitLocationDeletion } from "@/app/server-functions/plants/delete-location";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -35,13 +35,16 @@ function EditableLocation({
       return;
     }
 
-    const result = await updateLocation(location.id, name.trim());
-    if (result.success && result.location) {
-      onLocationUpdated(result.location);
+    const [updatedLocation, error] = await submitLocationUpdate({
+      id: location.id,
+      name: name.trim(),
+    });
+    if (updatedLocation) {
+      onLocationUpdated(updatedLocation);
       setIsEditing(false);
       toast.success("Location updated successfully");
     } else {
-      toast.error(result.error || "Failed to update location");
+      toast.error(error || "Failed to update location");
       setName(location.name);
       setIsEditing(false);
     }
@@ -115,24 +118,26 @@ export function LocationSettings({
     e.preventDefault();
     if (!newLocation.trim()) return;
 
-    const result = await addLocation(newLocation.trim());
-    if (result.success && result.location) {
-      setLocations([...locations, result.location]);
+    const [location, error] = await submitNewLocation({
+      name: newLocation.trim(),
+    });
+    if (location) {
+      setLocations([...locations, location]);
       setNewLocation("");
       toast.success("Location added successfully");
     } else {
-      toast.error("Failed to add location");
+      toast.error(error || "Failed to add location");
     }
   };
 
   const handleDeleteLocation = async (id: string) => {
-    const result = await deleteLocation(id);
-    if (result.success) {
+    const [res, error] = await submitLocationDeletion({ id });
+    if (res) {
       setLocations(locations.filter((loc) => loc.id !== id));
       toast.success("Location deleted successfully");
       router.refresh();
     } else {
-      toast.error(result.error || "Failed to delete location");
+      toast.error(error || "Failed to delete location");
     }
   };
 

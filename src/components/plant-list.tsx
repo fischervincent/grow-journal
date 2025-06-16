@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowUpDown, Search, X } from "lucide-react";
 import { NewPlantDialog } from "./new-plant-dialog";
 import { PlantEventTypeWithId } from "@/core/domain/plant-event-type";
-import { recordPlantEvent } from "@/app/actions/record-plant-event";
+import { submitPlantEvent } from "@/app/server-functions/record-plant-event";
 import debounce from "lodash/debounce";
 import { useSearchParams } from "next/navigation";
 import autoAnimate from "@formkit/auto-animate";
@@ -162,7 +162,11 @@ function PlantListContent({
     (plant: PlantWithId) =>
     (plantEventType: PlantEventTypeWithId) =>
     async () => {
-      await recordPlantEvent(plant.id, plantEventType.id, new Date());
+      await submitPlantEvent({
+        plantId: plant.id,
+        eventId: plantEventType.id,
+        eventDateTime: new Date(),
+      });
     };
 
   return (

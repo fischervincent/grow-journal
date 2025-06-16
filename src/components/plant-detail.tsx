@@ -19,9 +19,9 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { uploadPlantPhoto } from "@/app/actions/plants/upload-plant-photo";
-import { setMainPhoto } from "@/app/actions/plants/set-main-photo";
-import { deletePlantPhoto } from "@/app/actions/plants/delete-plant-photo";
+import { submitPlantPhotoUpload } from "@/app/server-functions/plants/upload-plant-photo";
+import { submitMainPhoto } from "@/app/server-functions/plants/set-main-photo";
+import { submitPlantPhotoDeletion } from "@/app/server-functions/plants/delete-plant-photo";
 import { toast } from "sonner";
 import { PlantCareHistoryContainer } from "./plant-care-history-container";
 import { ButtonWithConfirmation } from "@/components/ui/button-with-confirmation";
@@ -61,15 +61,15 @@ export function PlantDetail({
       const formData = new FormData();
       formData.append("file", file);
       formData.append("plantId", plant.id);
-      const result = await uploadPlantPhoto(formData);
-      if (result.photo) {
-        setPhotos([...photos, result.photo]);
+      const [photo, error] = await submitPlantPhotoUpload(formData);
+      if (photo) {
+        setPhotos([...photos, photo]);
         if (!plant.mainPhotoUrl) {
-          await setMainPhoto(plant.id, result.photo.id);
+          await submitMainPhoto({ plantId: plant.id, photoId: photo.id });
           router.refresh();
         }
-      } else if (result.error) {
-        toast.error(result.error);
+      } else if (error) {
+        toast.error(error);
       }
     } finally {
       setIsUploading(false);
@@ -77,23 +77,29 @@ export function PlantDetail({
   };
 
   const handleSetMainPhoto = async (photoId: string) => {
-    const result = await setMainPhoto(plant.id, photoId);
-    if (!result.error && result.plant) {
+    const [photo, error] = await submitMainPhoto({
+      plantId: plant.id,
+      photoId,
+    });
+    if (!error && photo) {
       router.refresh();
     } else {
-      toast.error(result.error || "Failed to set main photo");
+      toast.error(error || "Failed to set main photo");
     }
   };
 
   const handleDeletePhoto = async (photoId: string) => {
-    const result = await deletePlantPhoto(plant.id, photoId);
-    if (result.success) {
+    const [result, error] = await submitPlantPhotoDeletion({
+      plantId: plant.id,
+      photoId,
+    });
+    if (result) {
       setPhotos(photos.filter((p) => p.id !== photoId));
       if (plant.mainPhotoUrl) {
         router.refresh();
       }
     } else {
-      toast.error(result.error || "Failed to delete photo");
+      toast.error(error || "Failed to delete photo");
     }
   };
 

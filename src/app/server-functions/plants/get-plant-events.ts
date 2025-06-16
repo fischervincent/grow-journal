@@ -1,28 +1,23 @@
 "use server";
 
-import { auth } from "@/lib/auth";
+import { PlantEventWithId } from "@/core/domain/plant-event";
+import { getAuthenticatedUserId } from "../auth-helper";
 import { getPlantEventRepository } from "@/lib/repositories/plant-event-repository-factory";
-import { headers } from "next/headers";
 
 export async function getPlantEvents(plantId: string, eventTypeId?: string) {
-  "use server";
-  try {
-    const session = await auth.api.getSession({
-      headers: await headers()
-    })
-    const userId = session?.user?.id;
-    if (!userId) {
-      return { plantEvents: [], error: "Unauthorized" };
-    }
+  "use server"
 
+  try {
+    const userId = await getAuthenticatedUserId();
     const plantEventRepository = getPlantEventRepository();
+
     const plantEvents = eventTypeId
       ? await plantEventRepository.findByPlantIdAndType(plantId, eventTypeId, userId)
       : await plantEventRepository.findByPlantId(plantId, userId);
 
-    return { plantEvents, error: null };
+    return [plantEvents, null] as const;
   } catch (error) {
     console.error("Error fetching plant events:", error);
-    return { plantEvents: [], error: "Failed to fetch plant events" };
+    return [[] as PlantEventWithId[], error instanceof Error ? error.message : 'Failed to fetch plant events'] as const;
   }
 } 

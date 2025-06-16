@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { PlantEventType } from "@/core/domain/plant-event-type";
 import { PlantCareHistory } from "./plant-care-history";
-import { getAllPlantEventTypes } from "@/app/actions/plantEventTypes/get-all-plant-event-types";
+import { getAllPlantEventTypes } from "@/app/server-functions/plantEventTypes/get-all-plant-event-types";
 import { Card } from "@/components/ui/card";
 import {
   Select,
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { recordPlantEvent } from "@/app/actions/record-plant-event";
+import { submitPlantEvent } from "@/app/server-functions/record-plant-event";
 import { toast } from "sonner";
 
 interface PlantCareHistoryContainerProps {
@@ -34,8 +34,10 @@ export function PlantCareHistoryContainer({
 
   useEffect(() => {
     const loadEventTypes = async () => {
-      const plantEventTypes = await getAllPlantEventTypes();
-      setEventTypes(plantEventTypes);
+      const [plantEventTypes, error] = await getAllPlantEventTypes();
+      if (!error) {
+        setEventTypes([...plantEventTypes]);
+      }
       setIsLoading(false);
     };
     loadEventTypes();
@@ -52,12 +54,16 @@ export function PlantCareHistoryContainer({
       const commentToSend =
         eventType.hasComment && comment ? comment : undefined;
 
-      await recordPlantEvent(
+      const [, error] = await submitPlantEvent({
         plantId,
-        selectedEventType,
-        new Date(),
-        commentToSend
-      );
+        eventId: selectedEventType,
+        eventDateTime: new Date(),
+        comment: commentToSend,
+      });
+      if (error) {
+        toast.error(error || "Failed to record event");
+        return;
+      }
       toast.success("Event recorded");
       setSelectedEventType("");
       setComment("");

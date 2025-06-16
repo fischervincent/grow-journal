@@ -11,12 +11,12 @@ import {
 } from "@/components/ui/select";
 import { Calendar } from "lucide-react";
 import { PlantEventTypeWithId } from "@/core/domain/plant-event-type";
-import { getPlantEvents } from "@/app/actions/plants/get-plant-events";
+import { getPlantEvents } from "@/app/server-functions/plants/get-plant-events";
 import { PlantEventWithId } from "@/core/domain/plant-event";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
-import { deletePlantEvent } from "@/app/actions/plants/delete-plant-event";
+import { submitPlantEventDeletion } from "@/app/server-functions/plants/delete-plant-event";
 import { ButtonWithConfirmation } from "./ui/button-with-confirmation";
 
 interface PlantEventsAsListProps {
@@ -40,7 +40,7 @@ export function PlantEventsAsList({
   useEffect(() => {
     const loadEvents = async () => {
       setIsLoadingEvents(true);
-      const { plantEvents, error } = await getPlantEvents(
+      const [plantEvents, error] = await getPlantEvents(
         plantId,
         selectedEventType === ALL_EVENTS ? undefined : selectedEventType
       );
@@ -55,7 +55,7 @@ export function PlantEventsAsList({
   }, [plantId, selectedEventType, updateCount]);
 
   const handleDeleteEvent = async (eventId: string) => {
-    const { success, error } = await deletePlantEvent(eventId);
+    const [success, error] = await submitPlantEventDeletion({ eventId });
     if (error) {
       toast.error(error);
       return;

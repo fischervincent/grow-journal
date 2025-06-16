@@ -1,6 +1,6 @@
 "use client";
 
-import { sendPushNotification } from "@/app/actions/push-notif";
+import { sendPushNotification } from "@/app/server-functions/push-notif";
 import { usePushNotifications } from "@/lib/notification/push/use-notification";
 import React, { useRef } from "react";
 
@@ -21,7 +21,7 @@ export default function Page() {
 
     console.log("Sending message:", message);
 
-    await sendPushNotification(message);
+    await sendPushNotification({ message });
   };
 
   return (

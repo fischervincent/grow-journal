@@ -12,11 +12,11 @@ import {
 } from "./ui/dialog";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
-import { updatePlantDetails } from "@/app/actions/plants/update-plant-details";
+import { submitPlantDetailsUpdate } from "@/app/server-functions/plants/update-plant-details";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { LocationInput } from "./location-input";
-import { addLocation } from "@/app/actions/plants/add-location";
+import { submitNewLocation } from "@/app/server-functions/plants/add-location";
 
 interface EditPlantDialogProps {
   plantId: string;
@@ -52,17 +52,19 @@ export function EditPlantDialog({
     }
 
     try {
-      const result = await updatePlantDetails(plantId, {
+      const [result, errors] = await submitPlantDetailsUpdate({
+        plantId,
         name: formData.name.trim(),
         species: formData.species.trim() || undefined,
         locationId: formData.locationId || undefined,
       });
 
-      if (result.success) {
+      if (result) {
         setOpen(false);
         router.refresh();
       } else {
-        toast.error(result.error || "Failed to update plant details");
+        console.error(errors);
+        toast.error(errors || "Failed to update plant details");
       }
     } catch (error) {
       console.error("Error updating plant:", error);
@@ -75,11 +77,13 @@ export function EditPlantDialog({
   };
 
   const handleAddNewLocation = async (name: string) => {
-    const result = await addLocation(name, plantSlug);
-    if (result.success && result.location) {
-      setFormData((prev) => ({ ...prev, locationId: result.location.id }));
+    const [result, errors] = await submitNewLocation({ name, plantSlug });
+    if (result) {
+      setFormData((prev) => ({ ...prev, locationId: result.id }));
       return;
     }
+    console.error(errors);
+    toast.error(errors || "Failed to add new location");
     return;
   };
 

@@ -5,9 +5,9 @@ import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
 import { Pencil, Plus, Trash2, Check, X } from "lucide-react";
-import { addLocation } from "@/app/actions/plants/add-location";
-import { updateLocation } from "@/app/actions/plants/update-location";
-import { deleteLocation } from "@/app/actions/plants/delete-location";
+import { submitNewLocation } from "@/app/server-functions/plants/add-location";
+import { submitLocationUpdate } from "@/app/server-functions/plants/update-location";
+import { submitLocationDeletion } from "@/app/server-functions/plants/delete-location";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { ConfirmationDialog } from "./ui/confirmation-dialog";
@@ -19,12 +19,6 @@ interface Location {
 
 interface LocationSettingsContainerProps {
   initialLocations: Location[];
-}
-
-interface LocationActionResponse {
-  success: boolean;
-  location?: Location;
-  error?: string;
 }
 
 export function LocationSettingsContainer({
@@ -48,15 +42,15 @@ export function LocationSettingsContainer({
     if (!newLocation.trim()) return;
 
     try {
-      const result = (await addLocation(
-        newLocation.trim()
-      )) as LocationActionResponse;
-      if (result.success && result.location) {
-        setLocations([...locations, result.location]);
+      const [location, error] = await submitNewLocation({
+        name: newLocation.trim(),
+      });
+      if (location) {
+        setLocations([...locations, location]);
         setNewLocation("");
         toast.success("Location added successfully");
       } else {
-        toast.error(result.error || "Failed to add location");
+        toast.error(error || "Failed to add location");
       }
     } catch {
       toast.error("Failed to add location");
@@ -79,20 +73,20 @@ export function LocationSettingsContainer({
     if (!editingLocation || !editingLocation.name.trim()) return;
 
     try {
-      const result = (await updateLocation(
-        editingLocation.id,
-        editingLocation.name.trim()
-      )) as LocationActionResponse;
-      if (result.success && result.location) {
+      const [updatedLocation, error] = await submitLocationUpdate({
+        id: editingLocation.id,
+        name: editingLocation.name.trim(),
+      });
+      if (updatedLocation) {
         setLocations(
           locations.map((loc) =>
-            loc.id === editingLocation.id ? result.location! : loc
+            loc.id === editingLocation.id ? updatedLocation : loc
           )
         );
         setEditingLocation(null);
         toast.success("Location updated successfully");
       } else {
-        toast.error(result.error || "Failed to update location");
+        toast.error(error || "Failed to update location");
       }
     } catch {
       toast.error("Failed to update location");
@@ -110,13 +104,13 @@ export function LocationSettingsContainer({
   const handleDeleteLocation = async (id: string) => {
     setIsDeleting(true);
     try {
-      const result = (await deleteLocation(id)) as LocationActionResponse;
-      if (result.success) {
+      const [res, error] = await submitLocationDeletion({ id });
+      if (res) {
         setLocations(locations.filter((loc) => loc.id !== id));
         toast.success("Location deleted successfully");
         router.refresh();
       } else {
-        toast.error(result.error || "Failed to delete location");
+        toast.error(error || "Failed to delete location");
       }
     } catch {
       toast.error("Failed to delete location");

@@ -16,13 +16,11 @@ import Cookies from "js-cookie";
 
 // actions
 import {
-  subscribeUser,
-  unsubscribeUser,
-  checkSubscription,
-} from "@/app/actions/push-notif";
-
-// types
-import type WebPush from "web-push";
+  submitPushSubscription,
+  submitPushUnsubscription,
+  checkPushSubscription,
+} from "@/app/server-functions/push-notif";
+import { PushSubscription } from "web-push";
 
 interface PushNotificationsContext {
   isSupported: boolean;
@@ -63,7 +61,6 @@ export const PushNotificationsProvider: FunctionComponent<
   const [loadingMessage, setLoadingMessage] = useState<string | null>(null);
 
   const isSubscribed = !!subscription;
-
   /**
    * Check if browser supports service workers and push notifications
    * and then register the service worker
@@ -77,6 +74,9 @@ export const PushNotificationsProvider: FunctionComponent<
           updateViaCache: "none",
         });
         const sub = await registration.pushManager.getSubscription();
+        if (!sub) {
+          return;
+        }
         setSubscription(sub);
         setSubscriptionLoaded(true);
       })();
@@ -105,8 +105,8 @@ export const PushNotificationsProvider: FunctionComponent<
   useEffect(() => {
     if (deviceId && subscription) {
       (async () => {
-        const res = await checkSubscription(deviceId);
-        if (!res.success) {
+        const [res] = await checkPushSubscription(deviceId);
+        if (!res) {
           subscription?.unsubscribe();
           setSubscription(null);
         }
@@ -142,8 +142,8 @@ export const PushNotificationsProvider: FunctionComponent<
     });
     setSubscription(sub);
     setLoadingMessage("Subscribing...");
-    await subscribeUser({
-      sub: sub as unknown as WebPush.PushSubscription,
+    await submitPushSubscription({
+      sub: sub.toJSON(),
       deviceId,
     });
     setLoadingMessage(null);
@@ -157,7 +157,7 @@ export const PushNotificationsProvider: FunctionComponent<
     setLoadingMessage("Unsubscribing...");
     await subscription?.unsubscribe();
     setSubscription(null);
-    await unsubscribeUser(deviceId);
+    await submitPushUnsubscription({ deviceId });
     setLoadingMessage(null);
   }
 

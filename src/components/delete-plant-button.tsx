@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
-import { deletePlant } from "@/app/actions/plants/delete-plant";
+import { submitPlantDeletion } from "@/app/server-functions/plants/delete-plant";
 
 interface DeletePlantButtonProps {
   plantId: string;
@@ -28,7 +28,7 @@ export function DeletePlantButton({
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
-      await deletePlant(plantId);
+      await submitPlantDeletion({ plantId });
       setOpen(false);
       onDeleteSuccess?.();
     } catch (error) {

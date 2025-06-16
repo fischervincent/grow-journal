@@ -12,10 +12,10 @@ import {
 } from "@/core/domain/plant-event-type";
 import { Check, Plus, X } from "lucide-react";
 import { useState } from "react";
-import { createPlantEventType } from "../../actions/plantEventTypes/create-plant-event-type";
+import { createPlantEventType } from "../../server-functions/plantEventTypes/create-plant-event-type";
 import { toast } from "sonner";
-import { updatePlantEventType } from "@/app/actions/plantEventTypes/update-plant-event-type";
-import { deletePlantEventType } from "@/app/actions/plantEventTypes/delete-plant-event-type";
+import { updatePlantEventType } from "@/app/server-functions/plantEventTypes/update-plant-event-type";
+import { deletePlantEventType } from "@/app/server-functions/plantEventTypes/delete-plant-event-type";
 
 // Predefined color options
 const colorOptions = [
