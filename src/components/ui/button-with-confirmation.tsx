@@ -119,7 +119,7 @@ export function ButtonWithConfirmation({
           onMouseLeave={endLongPress}
           onTouchStart={startLongPress}
           onTouchEnd={endLongPress}
-          className={cn(className, "relative")}
+          className={cn(className, "relative select-none")}
           disabled={isLoading}
         >
           {children}
