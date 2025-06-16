@@ -12,10 +12,10 @@ import {
 } from "@/core/domain/plant-event-type";
 import { Check, Plus, X } from "lucide-react";
 import { useState } from "react";
-import { createPlantEventType } from "../../server-functions/plantEventTypes/create-plant-event-type";
+import { submitPlantEventType } from "../../server-functions/plantEventTypes/create-plant-event-type";
 import { toast } from "sonner";
-import { updatePlantEventType } from "@/app/server-functions/plantEventTypes/update-plant-event-type";
-import { deletePlantEventType } from "@/app/server-functions/plantEventTypes/delete-plant-event-type";
+import { submitPlantEventTypeUpdate } from "@/app/server-functions/plantEventTypes/update-plant-event-type";
+import { submitPlantEventTypeDeletion } from "@/app/server-functions/plantEventTypes/delete-plant-event-type";
 
 // Predefined color options
 const colorOptions = [
@@ -113,7 +113,7 @@ export const PlantEventTypeList = ({
   const handleAddEventType = async () => {
     if (!newEventType.name.trim()) return;
 
-    const [newEventTypeStored] = await createPlantEventType(newEventType);
+    const [newEventTypeStored] = await submitPlantEventType(newEventType);
     if (!newEventTypeStored) {
       // TODO: handle errors in form
       toast.error("Failed to create event type");
@@ -138,7 +138,7 @@ export const PlantEventTypeList = ({
     id: string,
     updates: Partial<PlantEventTypeWithId>
   ) => {
-    await updatePlantEventType(id, updates);
+    await submitPlantEventTypeUpdate({ id, ...updates });
     setEventTypes(
       eventTypes.map((eventType) =>
         eventType.id === id ? { ...eventType, ...updates } : eventType
@@ -153,7 +153,7 @@ export const PlantEventTypeList = ({
     const position = eventTypes.findIndex(
       (et) => et.id === eventTypeToDelete.id
     );
-    await deletePlantEventType(eventTypeToDelete);
+    await submitPlantEventTypeDeletion({ plantEventType: eventTypeToDelete });
     setEventTypes(
       eventTypes.filter((eventType) => eventType.id !== eventTypeToDelete.id)
     );

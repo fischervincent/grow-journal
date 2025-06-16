@@ -20,7 +20,7 @@ import {
   submitPushUnsubscription,
   checkPushSubscription,
 } from "@/app/server-functions/push-notif";
-import { PushSubscription } from "web-push";
+import webpush from "web-push";
 
 interface PushNotificationsContext {
   isSupported: boolean;
@@ -142,8 +142,9 @@ export const PushNotificationsProvider: FunctionComponent<
     });
     setSubscription(sub);
     setLoadingMessage("Subscribing...");
+    const subJson = sub.toJSON();
     await submitPushSubscription({
-      sub: sub.toJSON(),
+      sub: subJson as unknown as webpush.PushSubscription,
       deviceId,
     });
     setLoadingMessage(null);

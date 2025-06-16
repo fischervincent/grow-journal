@@ -126,6 +126,7 @@ export async function sendPushNotification(input: SendPushNotificationInput) {
         });
 
         // If the subscription is invalid, remove it from the database
+        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
         if (error instanceof Error && (error as any).statusCode! == 410) {
           await repository.deleteByEndpoint(subscription.endpoint);
         }

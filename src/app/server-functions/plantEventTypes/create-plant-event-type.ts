@@ -27,7 +27,7 @@ export async function submitPlantEventType(input: SubmitPlantEventTypeInput) {
 
     const plantEventTypeRepository = getPlantEventTypeRepository();
     const { addNewPlantEventType } = addNewPlantEventTypeUseCase(plantEventTypeRepository);
-    const createdPlantEventType = await addNewPlantEventType(newPlantEventType, userId);
+    const [createdPlantEventType] = await addNewPlantEventType(newPlantEventType, userId);
 
     return [createdPlantEventType, null] as const;
   } catch (error) {
