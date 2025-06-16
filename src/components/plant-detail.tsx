@@ -159,11 +159,11 @@ export function PlantDetail({
           <div className="p-4 bg-card">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
-                <h1 className="text-2xl font-semibold truncate">
+                <h1 className="text-2xl font-semibold truncate select-all">
                   {plant.name}
                 </h1>
                 {plant.species && (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground select-all">
                     {plant.species}
                   </p>
                 )}

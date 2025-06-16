@@ -77,10 +77,10 @@ export function PlantCard({
       </Link>
 
       <CardContent className="px-4 py-0">
-        <Link href={`/plants/${slug}`} className="hover:underline">
-          <h3 className="font-semibold text-lg">{name}</h3>
-        </Link>
-        {species && <p className="text-sm text-muted-foreground">{species}</p>}
+        <h3 className="font-semibold text-lg select-all">{name}</h3>
+        {species && (
+          <p className="text-sm text-muted-foreground select-all">{species}</p>
+        )}
         {location && (
           <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
             <MapPin className="w-4 h-4" />
