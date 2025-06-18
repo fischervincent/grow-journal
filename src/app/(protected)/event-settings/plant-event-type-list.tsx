@@ -16,6 +16,8 @@ import { submitPlantEventType } from "../../server-functions/plantEventTypes/cre
 import { toast } from "sonner";
 import { submitPlantEventTypeUpdate } from "@/app/server-functions/plantEventTypes/update-plant-event-type";
 import { submitPlantEventTypeDeletion } from "@/app/server-functions/plantEventTypes/delete-plant-event-type";
+import { ReminderConfigForm } from "./reminder-config-form";
+import type { PlantEventTypeReminderConfig } from "@/core/repositories/plant-reminder-repository";
 
 // Predefined color options
 const colorOptions = [
@@ -108,6 +110,9 @@ export const PlantEventTypeList = ({
     hasComment: false,
   });
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [reminderConfigs, setReminderConfigs] = useState<
+    Record<string, PlantEventTypeReminderConfig | null>
+  >({});
 
   // Handle adding a new event type
   const handleAddEventType = async () => {
@@ -167,6 +172,16 @@ export const PlantEventTypeList = ({
     setDeletedEvents(deletedEvents.filter((event) => event.id !== id));
   };
 
+  const handleReminderConfigChange = (
+    eventTypeId: string,
+    config: PlantEventTypeReminderConfig | null
+  ) => {
+    setReminderConfigs((prev) => ({
+      ...prev,
+      [eventTypeId]: config,
+    }));
+  };
+
   // Combine event types and deletion feedback in correct order
   const renderEventsList = () => {
     const allItems: ListItem[] = eventTypes.map((et, index) => ({
@@ -199,50 +214,71 @@ export const PlantEventTypeList = ({
         <Card key={eventType.id} className="overflow-hidden">
           <CardContent className="p-0">
             {editingId === eventType.id ? (
-              <EventTypeForm
-                eventType={eventType}
-                onSave={(updates) => {
-                  handleUpdateEventType(eventType.id, updates);
-                  setEditingId(null);
-                }}
-                onCancel={() => setEditingId(null)}
-              />
-            ) : (
-              <div className="flex items-center p-4">
-                <div
-                  className="w-6 h-6 rounded-full mr-3 flex-shrink-0"
-                  style={{ backgroundColor: eventType.displayColor }}
+              <>
+                <EventTypeForm
+                  eventType={eventType}
+                  onSave={(updates) => {
+                    handleUpdateEventType(eventType.id, updates);
+                    setEditingId(null);
+                  }}
+                  onCancel={() => setEditingId(null)}
                 />
-                <div className="flex-grow">
-                  <h3 className="font-medium">{eventType.name}</h3>
-                  <div className="flex gap-4 text-xs text-muted-foreground mt-1">
-                    {eventType.isSortableByDate && (
-                      <span>Sort plants by last event</span>
-                    )}
-                    {eventType.hasQuickAccessButton && (
-                      <span>Quick access</span>
-                    )}
+                <ReminderConfigForm
+                  plantEventTypeId={eventType.id}
+                  plantEventTypeName={eventType.name}
+                  onConfigChanged={(config) =>
+                    handleReminderConfigChange(eventType.id, config)
+                  }
+                />
+              </>
+            ) : (
+              <>
+                <div className="flex items-center p-4">
+                  <div
+                    className="w-6 h-6 rounded-full mr-3 flex-shrink-0"
+                    style={{ backgroundColor: eventType.displayColor }}
+                  />
+                  <div className="flex-grow">
+                    <h3 className="font-medium">{eventType.name}</h3>
+                    <div className="flex gap-4 text-xs text-muted-foreground mt-1">
+                      {eventType.isSortableByDate && (
+                        <span>Sort plants by last event</span>
+                      )}
+                      {eventType.hasQuickAccessButton && (
+                        <span>Quick access</span>
+                      )}
+                      {reminderConfigs[eventType.id]?.isEnabled && (
+                        <span>Reminder enabled</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditingId(eventType.id)}
+                      className="text-muted-foreground"
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteEventType(eventType)}
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                    >
+                      Delete
+                    </Button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setEditingId(eventType.id)}
-                    className="text-muted-foreground"
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDeleteEventType(eventType)}
-                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </div>
+                <ReminderConfigForm
+                  plantEventTypeId={eventType.id}
+                  plantEventTypeName={eventType.name}
+                  onConfigChanged={(config) =>
+                    handleReminderConfigChange(eventType.id, config)
+                  }
+                />
+              </>
             )}
           </CardContent>
         </Card>
@@ -409,12 +445,6 @@ export const PlantEventTypeList = ({
   );
 };
 
-interface EventTypeFormProps {
-  eventType: PlantEventType;
-  onSave: (updates: Partial<PlantEventType>) => void;
-  onCancel: () => void;
-}
-
 function EventTypeForm({ eventType, onSave, onCancel }: EventTypeFormProps) {
   const [formData, setFormData] = useState({
     name: eventType.name,
@@ -425,7 +455,7 @@ function EventTypeForm({ eventType, onSave, onCancel }: EventTypeFormProps) {
   });
 
   return (
-    <div className="p-4">
+    <div className="p-4 border-b border-gray-100">
       <h3 className="font-medium mb-4">Edit Event Type</h3>
       <div className="space-y-4">
         <div>
@@ -441,15 +471,15 @@ function EventTypeForm({ eventType, onSave, onCancel }: EventTypeFormProps) {
 
         <div>
           <Label>Color</Label>
-          <div className="flex flex-wrap gap-2 mt-1">
+          <div className="flex flex-wrap gap-2 mt-2">
             {colorOptions.map((color) => (
               <button
                 key={color.value}
                 type="button"
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
                   formData.displayColor === color.value
                     ? "ring-2 ring-offset-2 ring-[#2e7d32]"
-                    : ""
+                    : "hover:scale-110"
                 }`}
                 style={{ backgroundColor: color.value }}
                 onClick={() =>
@@ -465,55 +495,57 @@ function EventTypeForm({ eventType, onSave, onCancel }: EventTypeFormProps) {
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div>
-            <Label htmlFor="edit-sortable">Sortable by date</Label>
-            <p className="text-xs text-muted-foreground">
-              Allow sorting plants by last event date
-            </p>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between py-2">
+            <div>
+              <Label htmlFor="edit-sortable">Sortable by date</Label>
+              <p className="text-xs text-muted-foreground">
+                Allow sorting plants by last event date
+              </p>
+            </div>
+            <Switch
+              id="edit-sortable"
+              checked={formData.isSortableByDate}
+              onCheckedChange={(checked) =>
+                setFormData({ ...formData, isSortableByDate: checked })
+              }
+            />
           </div>
-          <Switch
-            id="edit-sortable"
-            checked={formData.isSortableByDate}
-            onCheckedChange={(checked) =>
-              setFormData({ ...formData, isSortableByDate: checked })
-            }
-          />
+
+          <div className="flex items-center justify-between py-2">
+            <div>
+              <Label htmlFor="edit-quick-access">Quick access button</Label>
+              <p className="text-xs text-muted-foreground">
+                Add a shortcut button, useful for frequently logged events
+              </p>
+            </div>
+            <Switch
+              id="edit-quick-access"
+              checked={formData.hasQuickAccessButton}
+              onCheckedChange={(checked) =>
+                setFormData({ ...formData, hasQuickAccessButton: checked })
+              }
+            />
+          </div>
+
+          <div className="flex items-center justify-between py-2">
+            <div>
+              <Label htmlFor="edit-comment">Comment field</Label>
+              <p className="text-xs text-muted-foreground">
+                Add a field to include a note when logging the event
+              </p>
+            </div>
+            <Switch
+              id="edit-comment"
+              checked={formData.hasComment}
+              onCheckedChange={(checked) =>
+                setFormData({ ...formData, hasComment: checked })
+              }
+            />
+          </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div>
-            <Label htmlFor="edit-quick-access">Quick access button</Label>
-            <p className="text-xs text-muted-foreground">
-              Add a shortcut button, useful for frequently logged events
-            </p>
-          </div>
-          <Switch
-            id="edit-quick-access"
-            checked={formData.hasQuickAccessButton}
-            onCheckedChange={(checked) =>
-              setFormData({ ...formData, hasQuickAccessButton: checked })
-            }
-          />
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div>
-            <Label htmlFor="edit-quick-access">Comment field</Label>
-            <p className="text-xs text-muted-foreground">
-              Add a field to include a note when logging the event
-            </p>
-          </div>
-          <Switch
-            id="edit-quick-access"
-            checked={formData.hasComment}
-            onCheckedChange={(checked) =>
-              setFormData({ ...formData, hasComment: checked })
-            }
-          />
-        </div>
-
-        <div className="flex justify-end gap-2 pt-2">
+        <div className="flex justify-end gap-2 pt-4 border-t border-gray-100">
           <Button variant="outline" onClick={onCancel}>
             Cancel
           </Button>

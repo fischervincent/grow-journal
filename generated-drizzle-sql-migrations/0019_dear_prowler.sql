@@ -1,0 +1,2 @@
+ALTER TABLE "plant_event_type_reminder_configs" ADD COLUMN "reminder_type" text DEFAULT 'fixed' NOT NULL;--> statement-breakpoint
+ALTER TABLE "plant_reminder_configs" ADD COLUMN "reminder_type" text DEFAULT 'fixed' NOT NULL;

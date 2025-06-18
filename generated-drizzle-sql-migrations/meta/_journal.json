@@ -127,6 +127,20 @@
       "when": 1749501309818,
       "tag": "0017_jazzy_rick_jones",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1750188462043,
+      "tag": "0018_strong_risque",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1750195487966,
+      "tag": "0019_dear_prowler",
+      "breakpoints": true
     }
   ]
 }
