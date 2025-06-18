@@ -21,10 +21,15 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## TODO
-- can add/remove pictures of plant, with main picture (displayed for the plant in the PlantList and PlantDetails view)
-- dialog to confirm quick record event
-- in PlantDetails can see every events and we can filter them by plantEventType, or search by text from comment
-- when user is created, wizard to choose (and create ?) event types
+- when create a plant -> create reminders
+- the user can customize settings about notif -> no notif, what time, email?, push notif?
+- reminder -> cron scheduler and notif -> email
+- notif -> pushNotif
+- possibility to see reminders / reminder
+- notif -> land on reminder
+- can snooze a reminder and set the date or the reminder
+- when we submit event, we recalculate reminder or create one
+- when user is created, wizard to choose (and create ?) event types, with default events like water and fertilizer and repot and health check?
 - filter plant list by location
 - event types form - add a way to create event types that are suggested, like a dropdown or a list where you can select from
 - form error handling
