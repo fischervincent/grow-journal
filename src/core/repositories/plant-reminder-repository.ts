@@ -124,6 +124,13 @@ export interface PlantReminderRepository {
 
   // Reminder instances
   findPlantReminders(userId: string, filters?: { plantId?: string; completed?: boolean; due?: boolean }): Promise<PlantReminder[]>;
+  findPlantRemindersWithDetails(userId: string, startDate: Date, endDate: Date): Promise<Array<PlantReminder & {
+    plantName: string;
+    plantSlug: string;
+    plantPhotoUrl?: string;
+    eventTypeName: string;
+    eventTypeColor: string;
+  }>>;
   findPlantRemindersByEventType(plantEventTypeId: string, userId: string): Promise<Array<PlantReminder & { plantName: string }>>;
   createPlantReminder(plantId: string, plantEventTypeId: string, scheduledAt: Date, userId: string): Promise<PlantReminder>;
   updateReminderScheduledDate(reminderId: string, scheduledAt: Date, userId: string): Promise<PlantReminder>;

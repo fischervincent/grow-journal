@@ -12,6 +12,7 @@ import {
   LogOut,
   Cog,
   MapPin,
+  Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,6 +44,12 @@ export function Navigation() {
             icon={<Home className="h-5 w-5" />}
             label="Plants"
             active={pathname === "/plants"}
+          />
+          <NavItem
+            href="/reminders"
+            icon={<Bell className="h-5 w-5" />}
+            label="Reminders"
+            active={pathname === "/reminders"}
           />
         </div>
 
@@ -106,6 +113,12 @@ export function Navigation() {
           icon={<Home className="h-6 w-6" />}
           label="Plants"
           active={pathname === "/plants"}
+        />
+        <MobileNavItem
+          href="/reminders"
+          icon={<Bell className="h-6 w-6" />}
+          label="Reminders"
+          active={pathname === "/reminders"}
         />
         <MobileNavItem
           href="/account"

@@ -1,4 +1,4 @@
-import { and, eq, isNull, desc, lte, asc } from "drizzle-orm";
+import { and, eq, isNull, desc, lte, asc, gte } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import {
   plantReminderConfigs,
@@ -745,7 +745,7 @@ export class DrizzlePlantReminderRepository implements PlantReminderRepository {
       })
       .from(plantReminders)
       .innerJoin(plants, eq(plantReminders.plantId, plants.id))
-      .innerJoin(plantEvents, eq(plantReminders.plantEventTypeId, plantEvents.id))
+      .innerJoin(plantEventTypes, eq(plantReminders.plantEventTypeId, plantEventTypes.id))
       .where(and(...conditions))
       .orderBy(desc(plantReminders.scheduledAt));
 
@@ -925,5 +925,57 @@ export class DrizzlePlantReminderRepository implements PlantReminderRepository {
       createdAt: updated.createdAt,
       updatedAt: updated.updatedAt,
     };
+  }
+
+  // Find plant reminders with details for the reminders page
+  async findPlantRemindersWithDetails(
+    userId: string,
+    startDate: Date,
+    endDate: Date
+  ): Promise<Array<PlantReminder & {
+    plantName: string;
+    plantSlug: string;
+    plantPhotoUrl?: string;
+    eventTypeName: string;
+    eventTypeColor: string;
+  }>> {
+    const results = await this.db
+      .select({
+        reminder: plantReminders,
+        plant: plants,
+        eventType: plantEventTypes,
+        photo: plantPhotos,
+      })
+      .from(plantReminders)
+      .innerJoin(plants, eq(plantReminders.plantId, plants.id))
+      .innerJoin(plantEventTypes, eq(plantReminders.plantEventTypeId, plantEventTypes.id))
+      .leftJoin(plantPhotos, eq(plants.mainPhotoId, plantPhotos.id))
+      .where(
+        and(
+          eq(plantReminders.userId, userId),
+          gte(plantReminders.scheduledAt, startDate),
+          lte(plantReminders.scheduledAt, endDate),
+          isNull(plants.deletedAt)
+        )
+      )
+      .orderBy(plantReminders.scheduledAt);
+
+    return results.map(({ reminder, plant, eventType, photo }) => ({
+      id: reminder.id,
+      plantId: reminder.plantId,
+      plantEventTypeId: reminder.plantEventTypeId,
+      scheduledAt: reminder.scheduledAt,
+      isCompleted: reminder.isCompleted,
+      completedAt: reminder.completedAt,
+      isSnoozed: reminder.isSnoozed,
+      snoozedUntil: reminder.snoozedUntil,
+      createdAt: reminder.createdAt,
+      updatedAt: reminder.updatedAt,
+      plantName: plant.name,
+      plantSlug: plant.slug,
+      plantPhotoUrl: photo?.url,
+      eventTypeName: eventType.name,
+      eventTypeColor: eventType.displayColor,
+    }));
   }
 } 
