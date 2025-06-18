@@ -13,6 +13,7 @@ import {
   Cog,
   MapPin,
   Bell,
+  BellRing,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -76,6 +77,12 @@ export function Navigation() {
               <Link href="/event-settings" className="flex items-center">
                 <Cog className="mr-2 h-4 w-4" />
                 Event Settings
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/notification-settings" className="flex items-center">
+                <BellRing className="mr-2 h-4 w-4" />
+                Notification Settings
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
