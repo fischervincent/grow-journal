@@ -28,6 +28,7 @@ export class DrizzlePlantReminderRepository implements PlantReminderRepository {
     id: string;
     name: string;
     mainPhotoUrl?: string;
+    lastDateByEvents: Record<string, { lastDate: string; eventName: string }>;
   }>> {
     const userPlants = await this.db
       .select({
@@ -48,6 +49,7 @@ export class DrizzlePlantReminderRepository implements PlantReminderRepository {
       id: plant.id,
       name: plant.name,
       mainPhotoUrl: photo?.url,
+      lastDateByEvents: (plant.lastDateByEvents as Record<string, { lastDate: string; eventName: string }>) || {},
     }));
   }
 

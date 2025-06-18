@@ -37,6 +37,7 @@ interface Plant {
   id: string;
   name: string;
   mainPhotoUrl?: string;
+  lastDateByEvents: Record<string, { lastDate: string; eventName: string }>;
 }
 
 interface PlantReminder {
@@ -153,6 +154,7 @@ export function PlantReminderSettingsDialog({
 
           let intervalValue = defaultConfig.intervalValue;
           let intervalUnit = defaultConfig.intervalUnit;
+          let calculatedDate = "";
 
           // Calculate smart interval if default config is smart and plant will be enabled
           if (shouldEnableByDefault && defaultConfig.reminderType === "smart") {
@@ -163,8 +165,8 @@ export function PlantReminderSettingsDialog({
             if (smartInterval) {
               intervalValue = smartInterval.intervalValue;
               intervalUnit = smartInterval.intervalUnit;
-              // Use the calculated reminder date instead of tomorrow
-              initialDates[plant.id] = smartInterval.nextReminderDate
+              // Use the calculated reminder date from smart interval
+              calculatedDate = smartInterval.nextReminderDate
                 .toISOString()
                 .slice(0, 10);
               console.log("Smart interval calculated:", smartInterval);
@@ -177,7 +179,20 @@ export function PlantReminderSettingsDialog({
               );
               intervalValue = defaultConfig.intervalValue;
               intervalUnit = defaultConfig.intervalUnit;
+              // Calculate date based on fallback interval
+              calculatedDate = calculateNextReminderDate(
+                plant.id,
+                intervalValue,
+                intervalUnit
+              );
             }
+          } else if (shouldEnableByDefault) {
+            // For fixed intervals, calculate based on last event + interval
+            calculatedDate = calculateNextReminderDate(
+              plant.id,
+              intervalValue,
+              intervalUnit
+            );
           }
 
           initialSettings[plant.id] = {
@@ -189,10 +204,8 @@ export function PlantReminderSettingsDialog({
             intervalUnit,
           };
 
-          // Only set default date if we haven't already set a smart interval date
-          if (!initialDates[plant.id]) {
-            initialDates[plant.id] = defaultDateString;
-          }
+          // Use calculated date if available, otherwise use default
+          initialDates[plant.id] = calculatedDate || defaultDateString;
         }
 
         console.log("Setting initial plant settings:", initialSettings);
@@ -261,6 +274,7 @@ export function PlantReminderSettingsDialog({
 
               let intervalValue = config.intervalValue ?? undefined;
               let intervalUnit = config.intervalUnit ?? undefined;
+              let calculatedDate = "";
 
               // Calculate smart interval if this plant has smart config but no existing reminder
               const hasExistingReminder = reminders.some(
@@ -281,8 +295,8 @@ export function PlantReminderSettingsDialog({
                 if (smartInterval) {
                   intervalValue = smartInterval.intervalValue;
                   intervalUnit = smartInterval.intervalUnit;
-                  // Use the calculated reminder date
-                  updatedDates[config.plantId] = smartInterval.nextReminderDate
+                  // Use the calculated reminder date from smart interval
+                  calculatedDate = smartInterval.nextReminderDate
                     .toISOString()
                     .slice(0, 10);
                   console.log(
@@ -290,13 +304,27 @@ export function PlantReminderSettingsDialog({
                     smartInterval
                   );
                 } else {
-                  // Smart calculation failed, keep the existing config values
+                  // Smart calculation failed, use existing values and calculate date
                   console.log(
                     "Smart calculation failed for existing config:",
                     config.plantId,
-                    "keeping existing values"
+                    "using existing values"
+                  );
+                  intervalValue = config.intervalValue ?? 1;
+                  intervalUnit = config.intervalUnit ?? "months";
+                  calculatedDate = calculateNextReminderDate(
+                    config.plantId,
+                    intervalValue,
+                    intervalUnit
                   );
                 }
+              } else if (config.isEnabled && !hasExistingReminder) {
+                // For fixed intervals or enabled configs without reminders
+                calculatedDate = calculateNextReminderDate(
+                  config.plantId,
+                  intervalValue ?? 1,
+                  intervalUnit ?? "months"
+                );
               }
 
               updatedSettings[config.plantId] = {
@@ -308,13 +336,18 @@ export function PlantReminderSettingsDialog({
                 intervalUnit,
               };
 
-              // If enabled and we haven't set a smart date, set a default reminder date
-              if (config.isEnabled && !updatedDates[config.plantId]) {
-                const defaultDate = new Date();
-                defaultDate.setDate(defaultDate.getDate() + 1);
-                updatedDates[config.plantId] = defaultDate
-                  .toISOString()
-                  .slice(0, 10);
+              // Set the calculated date or fallback to default
+              if (config.isEnabled) {
+                if (calculatedDate) {
+                  updatedDates[config.plantId] = calculatedDate;
+                } else if (!updatedDates[config.plantId]) {
+                  // Fallback to tomorrow if no calculated date
+                  const defaultDate = new Date();
+                  defaultDate.setDate(defaultDate.getDate() + 1);
+                  updatedDates[config.plantId] = defaultDate
+                    .toISOString()
+                    .slice(0, 10);
+                }
               }
 
               hasChanges = true;
@@ -377,7 +410,8 @@ export function PlantReminderSettingsDialog({
         toast.error("Failed to load plants");
         return;
       }
-      setPlants(userPlants || []);
+      console.log("Loaded plants data:", userPlants);
+      setPlants((userPlants || []) as Plant[]);
 
       // Load existing reminders and configs
       await Promise.all([loadReminders(), loadPlantConfigs()]);
@@ -448,6 +482,81 @@ export function PlantReminderSettingsDialog({
     ) {
       updatePlantReminderDate(plantId, globalReminderDate);
     }
+  };
+
+  const calculateNextReminderDate = (
+    plantId: string,
+    intervalValue: number,
+    intervalUnit: string
+  ): string => {
+    // Get the plant's last event for this event type
+    const plant = plants.find((p) => p.id === plantId);
+    console.log(`Calculating date for plant ${plantId}:`, {
+      plant: plant
+        ? {
+            id: plant.id,
+            name: plant.name,
+            lastDateByEvents: plant.lastDateByEvents,
+          }
+        : null,
+      eventTypeId,
+      intervalValue,
+      intervalUnit,
+    });
+
+    if (!plant) {
+      // Fallback to tomorrow
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      console.log(
+        "No plant found, using tomorrow:",
+        tomorrow.toISOString().slice(0, 10)
+      );
+      return tomorrow.toISOString().slice(0, 10);
+    }
+
+    // Check if there's a last event for this event type
+    const lastEventInfo = plant.lastDateByEvents?.[eventTypeId];
+    console.log(`Last event info for eventType ${eventTypeId}:`, lastEventInfo);
+
+    if (!lastEventInfo) {
+      // No last event, use tomorrow
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      console.log(
+        "No last event found, using tomorrow:",
+        tomorrow.toISOString().slice(0, 10)
+      );
+      return tomorrow.toISOString().slice(0, 10);
+    }
+
+    // Calculate next date based on last event + interval
+    const lastEventDate = new Date(lastEventInfo.lastDate);
+    const nextDate = new Date(lastEventDate);
+
+    switch (intervalUnit) {
+      case "days":
+        nextDate.setDate(nextDate.getDate() + intervalValue);
+        break;
+      case "weeks":
+        nextDate.setDate(nextDate.getDate() + intervalValue * 7);
+        break;
+      case "months":
+        nextDate.setMonth(nextDate.getMonth() + intervalValue);
+        break;
+      case "years":
+        nextDate.setFullYear(nextDate.getFullYear() + intervalValue);
+        break;
+      default:
+        // Fallback to days
+        nextDate.setDate(nextDate.getDate() + intervalValue);
+    }
+
+    const result = nextDate.toISOString().slice(0, 10);
+    console.log(
+      `Calculated reminder date: ${result} (last event: ${lastEventInfo.lastDate}, interval: ${intervalValue} ${intervalUnit})`
+    );
+    return result;
   };
 
   const calculateSmartIntervalForPlant = async (
