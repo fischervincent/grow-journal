@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -112,6 +112,136 @@ export function PlantReminderSettingsDialog({
     Set<string>
   >(new Set());
 
+  const loadPlants = useCallback(async () => {
+    setIsLoadingPlants(true);
+    try {
+      const [userPlants, error] = await getUserPlantsWithPhotos();
+      if (error) {
+        toast.error("Failed to load plants");
+        return;
+      }
+      console.log("Loaded plants data:", userPlants);
+      setPlants((userPlants || []) as Plant[]);
+
+      // Load existing reminders and configs
+      await Promise.all([loadReminders(), loadPlantConfigs()]);
+    } catch {
+      toast.error("Failed to load plants");
+    } finally {
+      setIsLoadingPlants(false);
+    }
+  }, []);
+
+  const calculateNextReminderDate = useCallback(
+    (plantId: string, intervalValue: number, intervalUnit: string): string => {
+      // Get the plant's last event for this event type
+      const plant = plants.find((p) => p.id === plantId);
+      console.log(`Calculating date for plant ${plantId}:`, {
+        plant: plant
+          ? {
+              id: plant.id,
+              name: plant.name,
+              lastDateByEvents: plant.lastDateByEvents,
+            }
+          : null,
+        eventTypeId,
+        intervalValue,
+        intervalUnit,
+      });
+
+      if (!plant) {
+        // Fallback to tomorrow
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        console.log(
+          "No plant found, using tomorrow:",
+          tomorrow.toISOString().slice(0, 10)
+        );
+        return tomorrow.toISOString().slice(0, 10);
+      }
+
+      // Check if there's a last event for this event type
+      const lastEventInfo = plant.lastDateByEvents?.[eventTypeId];
+      console.log(
+        `Last event info for eventType ${eventTypeId}:`,
+        lastEventInfo
+      );
+
+      if (!lastEventInfo) {
+        // No last event, use tomorrow
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        console.log(
+          "No last event found, using tomorrow:",
+          tomorrow.toISOString().slice(0, 10)
+        );
+        return tomorrow.toISOString().slice(0, 10);
+      }
+
+      // Calculate next date based on last event + interval
+      const lastEventDate = new Date(lastEventInfo.lastDate);
+      const nextDate = new Date(lastEventDate);
+
+      switch (intervalUnit) {
+        case "days":
+          nextDate.setDate(nextDate.getDate() + intervalValue);
+          break;
+        case "weeks":
+          nextDate.setDate(nextDate.getDate() + intervalValue * 7);
+          break;
+        case "months":
+          nextDate.setMonth(nextDate.getMonth() + intervalValue);
+          break;
+        case "years":
+          nextDate.setFullYear(nextDate.getFullYear() + intervalValue);
+          break;
+        default:
+          // Fallback to days
+          nextDate.setDate(nextDate.getDate() + intervalValue);
+      }
+
+      const result = nextDate.toISOString().slice(0, 10);
+      console.log(
+        `Calculated reminder date: ${result} (last event: ${lastEventInfo.lastDate}, interval: ${intervalValue} ${intervalUnit})`
+      );
+      return result;
+    },
+    [plants, eventTypeId]
+  );
+
+  const calculateSmartIntervalForPlant = useCallback(
+    async (
+      plantId: string
+    ): Promise<{
+      intervalValue: number;
+      intervalUnit: string;
+      nextReminderDate: Date;
+      lastEventDate: Date | null;
+    } | null> => {
+      try {
+        const [result, error] = await calculateSmartInterval({
+          plantId,
+          eventTypeId,
+        });
+
+        if (error) {
+          console.error("Failed to calculate smart interval:", error);
+          // Track plants with smart calculation issues
+          setPlantsWithSmartIssues((prev) => new Set([...prev, plantId]));
+          return null;
+        }
+
+        return result;
+      } catch (error) {
+        console.error("Failed to calculate smart interval:", error);
+        // Track plants with smart calculation issues
+        setPlantsWithSmartIssues((prev) => new Set([...prev, plantId]));
+        return null;
+      }
+    },
+    [eventTypeId]
+  );
+
   // Reset sync state when dialog opens/closes
   useEffect(() => {
     if (open) {
@@ -127,7 +257,7 @@ export function PlantReminderSettingsDialog({
       console.log("Dialog opened, loading plants...");
       loadPlants();
     }
-  }, [open]);
+  }, [open, loadPlants]);
 
   // Initialize plant settings when plants are loaded
   useEffect(() => {
@@ -216,7 +346,14 @@ export function PlantReminderSettingsDialog({
 
       initializePlantSettings();
     }
-  }, [plants, defaultConfig, open, mode]);
+  }, [
+    plants,
+    defaultConfig,
+    open,
+    mode,
+    calculateNextReminderDate,
+    calculateSmartIntervalForPlant,
+  ]);
 
   // Sync plant settings with existing configs in edit mode
   useEffect(() => {
@@ -400,27 +537,13 @@ export function PlantReminderSettingsDialog({
     hasSyncedReminders,
     isLoadingPlants,
     isLoadingConfigs,
+    calculateNextReminderDate,
+    calculateSmartIntervalForPlant,
+    plantConfigs,
+    plantReminderDates,
+    plantSettings,
+    reminders,
   ]);
-
-  const loadPlants = async () => {
-    setIsLoadingPlants(true);
-    try {
-      const [userPlants, error] = await getUserPlantsWithPhotos();
-      if (error) {
-        toast.error("Failed to load plants");
-        return;
-      }
-      console.log("Loaded plants data:", userPlants);
-      setPlants((userPlants || []) as Plant[]);
-
-      // Load existing reminders and configs
-      await Promise.all([loadReminders(), loadPlantConfigs()]);
-    } catch {
-      toast.error("Failed to load plants");
-    } finally {
-      setIsLoadingPlants(false);
-    }
-  };
 
   const loadReminders = async () => {
     try {
@@ -481,111 +604,6 @@ export function PlantReminderSettingsDialog({
       !plantReminderDates[plantId]
     ) {
       updatePlantReminderDate(plantId, globalReminderDate);
-    }
-  };
-
-  const calculateNextReminderDate = (
-    plantId: string,
-    intervalValue: number,
-    intervalUnit: string
-  ): string => {
-    // Get the plant's last event for this event type
-    const plant = plants.find((p) => p.id === plantId);
-    console.log(`Calculating date for plant ${plantId}:`, {
-      plant: plant
-        ? {
-            id: plant.id,
-            name: plant.name,
-            lastDateByEvents: plant.lastDateByEvents,
-          }
-        : null,
-      eventTypeId,
-      intervalValue,
-      intervalUnit,
-    });
-
-    if (!plant) {
-      // Fallback to tomorrow
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      console.log(
-        "No plant found, using tomorrow:",
-        tomorrow.toISOString().slice(0, 10)
-      );
-      return tomorrow.toISOString().slice(0, 10);
-    }
-
-    // Check if there's a last event for this event type
-    const lastEventInfo = plant.lastDateByEvents?.[eventTypeId];
-    console.log(`Last event info for eventType ${eventTypeId}:`, lastEventInfo);
-
-    if (!lastEventInfo) {
-      // No last event, use tomorrow
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      console.log(
-        "No last event found, using tomorrow:",
-        tomorrow.toISOString().slice(0, 10)
-      );
-      return tomorrow.toISOString().slice(0, 10);
-    }
-
-    // Calculate next date based on last event + interval
-    const lastEventDate = new Date(lastEventInfo.lastDate);
-    const nextDate = new Date(lastEventDate);
-
-    switch (intervalUnit) {
-      case "days":
-        nextDate.setDate(nextDate.getDate() + intervalValue);
-        break;
-      case "weeks":
-        nextDate.setDate(nextDate.getDate() + intervalValue * 7);
-        break;
-      case "months":
-        nextDate.setMonth(nextDate.getMonth() + intervalValue);
-        break;
-      case "years":
-        nextDate.setFullYear(nextDate.getFullYear() + intervalValue);
-        break;
-      default:
-        // Fallback to days
-        nextDate.setDate(nextDate.getDate() + intervalValue);
-    }
-
-    const result = nextDate.toISOString().slice(0, 10);
-    console.log(
-      `Calculated reminder date: ${result} (last event: ${lastEventInfo.lastDate}, interval: ${intervalValue} ${intervalUnit})`
-    );
-    return result;
-  };
-
-  const calculateSmartIntervalForPlant = async (
-    plantId: string
-  ): Promise<{
-    intervalValue: number;
-    intervalUnit: string;
-    nextReminderDate: Date;
-    lastEventDate: Date | null;
-  } | null> => {
-    try {
-      const [result, error] = await calculateSmartInterval({
-        plantId,
-        eventTypeId,
-      });
-
-      if (error) {
-        console.error("Failed to calculate smart interval:", error);
-        // Track plants with smart calculation issues
-        setPlantsWithSmartIssues((prev) => new Set([...prev, plantId]));
-        return null;
-      }
-
-      return result;
-    } catch (error) {
-      console.error("Failed to calculate smart interval:", error);
-      // Track plants with smart calculation issues
-      setPlantsWithSmartIssues((prev) => new Set([...prev, plantId]));
-      return null;
     }
   };
 

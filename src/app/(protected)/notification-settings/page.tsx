@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   ArrowLeft,
   Bell,
@@ -85,29 +85,29 @@ export default function NotificationSettingsPage() {
   }, []);
 
   // Load settings from database on mount
-  useEffect(() => {
-    const loadSettings = async () => {
-      setInitialLoading(true);
-      const [result, error] = await getNotificationSettings();
+  const loadSettings = useCallback(async () => {
+    setInitialLoading(true);
+    const [result, error] = await getNotificationSettings();
 
-      if (error) {
-        toast.error("Failed to load notification settings");
-        console.error(error);
-      } else if (result) {
-        setSettings({
-          enabled: result.enabled,
-          pushEnabled: result.pushEnabled && push.isSubscribed,
-          emailEnabled: result.emailEnabled,
-          notificationTime: result.notificationTime,
-          timezone: result.timezone,
-        });
-      }
+    if (error) {
+      toast.error("Failed to load notification settings");
+      console.error(error);
+    } else if (result) {
+      setSettings({
+        enabled: result.enabled,
+        pushEnabled: result.pushEnabled && push.isSubscribed,
+        emailEnabled: result.emailEnabled,
+        notificationTime: result.notificationTime,
+        timezone: result.timezone,
+      });
+    }
 
-      setInitialLoading(false);
-    };
-
-    loadSettings();
+    setInitialLoading(false);
   }, [push.isSubscribed]);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   // Save settings to database
   const saveSettings = async (updates: Partial<NotificationSettings>) => {
