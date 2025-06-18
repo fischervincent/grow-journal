@@ -1,7 +1,7 @@
 "use client";
 
 import { redirect, useRouter } from "next/navigation";
-import { ArrowLeft, Settings, MapPin } from "lucide-react";
+import { ArrowLeft, Settings, MapPin, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -106,9 +106,23 @@ export default function AccountPage() {
                 </div>
                 <ArrowLeft className="h-5 w-5 rotate-180 text-gray-400" />
               </Link>
+              <Link
+                href="/notification-settings"
+                className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors border-t"
+              >
+                <div className="flex items-center gap-3">
+                  <Bell className="h-5 w-5 text-gray-500" />
+                  <div>
+                    <div className="font-medium">Notifications</div>
+                    <div className="text-sm text-muted-foreground">
+                      Manage your notification preferences
+                    </div>
+                  </div>
+                </div>
+                <ArrowLeft className="h-5 w-5 rotate-180 text-gray-400" />
+              </Link>
             </CardContent>
           </Card>
-          <Link href="/notif">Manage Push Notifications</Link>
         </div>
       </ScrollArea>
     </div>

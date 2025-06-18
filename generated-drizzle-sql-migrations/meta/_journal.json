@@ -141,6 +141,13 @@
       "when": 1750195487966,
       "tag": "0019_dear_prowler",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1750259582984,
+      "tag": "0020_harsh_black_widow",
+      "breakpoints": true
     }
   ]
 }
