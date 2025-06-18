@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'Grow Journal - Plant Care',
     short_name: 'GrowJournal',
     description: 'Log plant care, track growth over time, and get reminders for watering and fertilizing.',
-    start_url: '/',
+    start_url: '/plants',
     display: 'standalone',
     background_color: '#ffffff',
     theme_color: '#166534',
