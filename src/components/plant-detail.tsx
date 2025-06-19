@@ -59,13 +59,14 @@ export function PlantDetail({
 
     setIsUploading(true);
     try {
-      // Compress image before upload to reduce storage costs
+      // Compress image before upload - prioritize quality for plant photos
       const compressionOptions = {
-        maxSizeMB: 0.5, // Limit to 500KB
-        maxWidthOrHeight: 1024, // Max dimension for retina displays (2x your 638px display)
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1280,
         useWebWorker: true,
         fileType: "image/webp" as const, // Use WebP for better compression
-        initialQuality: 0.85, // 85% quality
+        initialQuality: 0.95, // Very high quality - 95%
+        alwaysKeepResolution: false, // Allow some size reduction if needed
       };
 
       const compressedFile = await imageCompression(file, compressionOptions);

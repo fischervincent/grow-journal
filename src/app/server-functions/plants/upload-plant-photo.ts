@@ -7,7 +7,7 @@ import { getAuthenticatedUserId } from "../auth-helper";
 import { v4 as uuidv4 } from "uuid";
 import { revalidatePath } from "next/cache";
 
-const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB (reduced since we're compressing)
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB (allowing for high-quality compressed images)
 const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 
