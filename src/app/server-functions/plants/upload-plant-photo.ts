@@ -7,7 +7,7 @@ import { getAuthenticatedUserId } from "../auth-helper";
 import { v4 as uuidv4 } from "uuid";
 import { revalidatePath } from "next/cache";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB (reduced since we're compressing)
 const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 
@@ -35,7 +35,10 @@ export async function submitPlantPhotoUpload(formData: FormData): Promise<[Plant
       return [null, `File type must be one of: ${ALLOWED_FILE_TYPES.join(", ")}`] as const;
     }
 
-    const unguessableFileName = `${uuidv4()}.jpg`;
+    // Use the correct file extension based on the processed file type
+    const fileExtension = file.type === 'image/webp' ? 'webp' :
+      file.type === 'image/png' ? 'png' : 'jpg';
+    const unguessableFileName = `${uuidv4()}.${fileExtension}`;
 
     // Upload to Vercel Blob
     const { url } = await put(

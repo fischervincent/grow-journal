@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { PlantCareHistoryContainer } from "./plant-care-history-container";
 import { ButtonWithConfirmation } from "@/components/ui/button-with-confirmation";
 import { EditPlantDialog } from "./edit-plant-dialog";
+import imageCompression from "browser-image-compression";
 
 interface PlantDetailProps {
   plant: PlantWithPhotoAndId;
@@ -58,8 +59,19 @@ export function PlantDetail({
 
     setIsUploading(true);
     try {
+      // Compress image before upload to reduce storage costs
+      const compressionOptions = {
+        maxSizeMB: 0.5, // Limit to 500KB
+        maxWidthOrHeight: 1024, // Max dimension for retina displays (2x your 638px display)
+        useWebWorker: true,
+        fileType: "image/webp" as const, // Use WebP for better compression
+        initialQuality: 0.85, // 85% quality
+      };
+
+      const compressedFile = await imageCompression(file, compressionOptions);
+
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", compressedFile);
       formData.append("plantId", plant.id);
       const [photo, error] = await submitPlantPhotoUpload(formData);
       if (photo) {
@@ -68,9 +80,13 @@ export function PlantDetail({
           await submitMainPhoto({ plantId: plant.id, photoId: photo.id });
           router.refresh();
         }
+        toast.success("Photo uploaded successfully!");
       } else if (error) {
         toast.error(error);
       }
+    } catch (compressionError) {
+      console.error("Image compression failed:", compressionError);
+      toast.error("Failed to process image. Please try again.");
     } finally {
       setIsUploading(false);
     }
