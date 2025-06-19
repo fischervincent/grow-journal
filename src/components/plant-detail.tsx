@@ -143,6 +143,8 @@ export function PlantDetail({
                 alt=""
                 fill
                 className="object-cover"
+                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 800px"
+                priority={true}
               />
             ) : (
               <div className="flex h-full items-center justify-center">
@@ -249,6 +251,8 @@ export function PlantDetail({
                           alt=""
                           fill
                           className="object-cover rounded-lg"
+                          sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 250px"
+                          loading="lazy"
                         />
                         <div className="absolute inset-x-0 bottom-0 bg-black/60 text-white text-xs p-2">
                           {new Date(photo.takenAt).toLocaleDateString(
