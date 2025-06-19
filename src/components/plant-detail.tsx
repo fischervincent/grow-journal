@@ -62,7 +62,7 @@ export function PlantDetail({
       // Compress image before upload - prioritize quality for plant photos
       const compressionOptions = {
         maxSizeMB: 1,
-        maxWidthOrHeight: 1280,
+        maxWidthOrHeight: 638,
         useWebWorker: true,
         fileType: "image/jpeg" as const,
         initialQuality: 0.95, // Very high quality - 95%
