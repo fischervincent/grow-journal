@@ -52,7 +52,7 @@ const nextConfig: NextConfig = {
     ],
     // Optimized for plant images
     minimumCacheTTL: 31536000, // 1 year cache
-    formats: ['image/avif', 'image/webp'], // AVIF first for better compression
+    formats: ['image/webp'], // Only WebP - no double compression with AVIF
     deviceSizes: [640, 768, 1024, 1280, 1920], // Streamlined for your breakpoints
     imageSizes: [64, 128, 256, 384, 512, 800], // Optimized for plant card/detail sizes
   },
