@@ -64,9 +64,8 @@ export function PlantDetail({
         maxSizeMB: 1,
         maxWidthOrHeight: 1280,
         useWebWorker: true,
-        fileType: "image/webp" as const, // Use WebP for better compression
+        fileType: "image/jpeg" as const,
         initialQuality: 0.95, // Very high quality - 95%
-        alwaysKeepResolution: false, // Allow some size reduction if needed
       };
 
       const compressedFile = await imageCompression(file, compressionOptions);
