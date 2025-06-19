@@ -2,16 +2,36 @@ import type { NextConfig } from "next";
 
 /** @type {import('next').NextConfig} */
 const nextConfig: NextConfig = {
+  // Compiler optimizations
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+
   experimental: {
     serverActions: {
       bodySizeLimit: '10mb'
-    }
+    },
+    // Optimize bundling
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-avatar', '@radix-ui/react-dialog'],
   },
+
+  // Compression for better performance and lower bandwidth costs
+  compress: true,
+
   // Add cache headers for optimized images
   async headers() {
     return [
       {
         source: '/_next/image(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/_next/static/(.*)',
         headers: [
           {
             key: 'Cache-Control',
@@ -30,14 +50,11 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
-    // Enable caching for external images
-    minimumCacheTTL: 31536000, // 1 year in seconds, matching your blob storage cache headers
-    // Disable image optimization for blob storage to respect original cache headers
-    unoptimized: false,
-    // Set cache headers for optimized images
-    formats: ['image/webp', 'image/avif'],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    // Optimized for plant images
+    minimumCacheTTL: 31536000, // 1 year cache
+    formats: ['image/avif', 'image/webp'], // AVIF first for better compression
+    deviceSizes: [640, 768, 1024, 1280, 1920], // Streamlined for your breakpoints
+    imageSizes: [64, 128, 256, 384, 512, 800], // Optimized for plant card/detail sizes
   },
 };
 
