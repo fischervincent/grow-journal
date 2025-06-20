@@ -26,17 +26,21 @@ import { toast } from "sonner";
 import { PlantCareHistoryContainer } from "./plant-care-history-container";
 import { ButtonWithConfirmation } from "@/components/ui/button-with-confirmation";
 import { EditPlantDialog } from "./edit-plant-dialog";
+import { PlantNotesContainer } from "./plant-notes-container";
 import imageCompression from "browser-image-compression";
+import { Note } from "@/core/domain/note";
 
 interface PlantDetailProps {
   plant: PlantWithPhotoAndId;
   initialPhotos: PlantPhoto[];
+  initialNotes: Note[];
   locations: Array<{ id: string; name: string }>;
 }
 
 export function PlantDetail({
   plant,
   initialPhotos,
+  initialNotes,
   locations,
 }: PlantDetailProps) {
   const router = useRouter();
@@ -345,14 +349,10 @@ export function PlantDetail({
           </TabsContent>
 
           <TabsContent value="notes" className="mt-4">
-            <Card>
-              <CardHeader>
-                <h2 className="text-xl font-semibold">Notes</h2>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-500">No notes yet.</p>
-              </CardContent>
-            </Card>
+            <PlantNotesContainer
+              plantId={plant.id}
+              initialNotes={initialNotes}
+            />
           </TabsContent>
         </Tabs>
       </div>
