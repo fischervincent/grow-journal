@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ButtonWithConfirmation } from "@/components/ui/button-with-confirmation";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Camera,
   FileText,
@@ -230,15 +231,11 @@ export function PlantNotesContainer({
           </Button>
         </div>
         {notes.length > 0 && (
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search notes..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              className="pl-10"
-            />
-          </div>
+          <SearchInput
+            value={searchText}
+            onChange={setSearchText}
+            placeholder="Search notes..."
+          />
         )}
       </CardHeader>
       <CardContent className="space-y-4">

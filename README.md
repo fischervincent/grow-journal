@@ -35,3 +35,4 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 - form error handling
 - refactor: /actions <- bad name, it's not only server actions
 - feedback on user actions like: creating / deleting an event type
+- search notes in backend (if notes > 50 ?) with debounce 
