@@ -15,6 +15,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { FormErrorList, FieldError } from "@/components/ui/form-error";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useState, useEffect } from "react";
 import { useFormError } from "@/hooks/use-form-error";
 import { createReminderConfig } from "@/app/server-functions/plantEventTypes/create-reminder-config";
@@ -30,6 +31,7 @@ import {
   Settings,
   Calendar,
   Brain,
+  AlertCircle,
 } from "lucide-react";
 import { PlantReminderSettingsDialog } from "./plant-reminder-settings-dialog";
 
@@ -432,6 +434,16 @@ export function ReminderConfigForm({
 
           {formData.isEnabled && (
             <>
+              <Alert className="border-amber-200 bg-amber-50">
+                <AlertCircle className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-amber-800">
+                  <strong>Work in progress:</strong> Reminder notifications are
+                  not yet implemented. You can configure settings now, but
+                  notifications won&apos;t be sent until this feature is
+                  completed.
+                </AlertDescription>
+              </Alert>
+
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Reminder Type</Label>
                 <RadioGroup
