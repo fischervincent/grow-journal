@@ -154,7 +154,10 @@ export default function PlantCareReminderEmail({
               timezone ({userInfo.timezone})
             </Text>
             <Text style={footerText}>
-              <Link href={`${baseUrl}/settings`} style={footerLink}>
+              <Link
+                href={`${baseUrl}/notification-settings`}
+                style={footerLink}
+              >
                 Manage your notification settings
               </Link>
             </Text>
