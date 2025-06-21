@@ -25,14 +25,12 @@ export async function cleanupDuplicateReminders() {
     // Find duplicates and keep only the most recent one
     let duplicatesRemoved = 0;
 
-    for (const [key, reminders] of reminderGroups) {
+    for (const [, reminders] of reminderGroups) {
       if (reminders.length > 1) {
         // Sort by creation date, keep the newest
         reminders.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-        const toKeep = reminders[0];
         const toRemove = reminders.slice(1);
 
-        // Remove duplicates (we'll need to add a delete method to the repository)
         duplicatesRemoved += toRemove.length;
       }
     }
