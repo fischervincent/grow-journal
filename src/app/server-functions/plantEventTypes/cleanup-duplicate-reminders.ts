@@ -33,7 +33,6 @@ export async function cleanupDuplicateReminders() {
         const toRemove = reminders.slice(1);
 
         // Remove duplicates (we'll need to add a delete method to the repository)
-        console.log(`Found ${toRemove.length} duplicates for ${key}, keeping reminder ${toKeep.id}`);
         duplicatesRemoved += toRemove.length;
       }
     }

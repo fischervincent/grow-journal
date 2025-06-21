@@ -138,7 +138,6 @@ export class DrizzlePlantReminderRepository implements PlantReminderRepository {
       // Not enough data for smart calculation
       return null;
     }
-    console.log('Recent events:', recentEvents);
     // Calculate intervals between consecutive events (in days)
     const intervals: number[] = [];
     for (let i = 0; i < recentEvents.length - 1; i++) {
@@ -150,14 +149,12 @@ export class DrizzlePlantReminderRepository implements PlantReminderRepository {
         intervals.push(diffInDays);
       }
     }
-    console.log('Intervals:', intervals);
     if (intervals.length === 0) {
       return null;
     }
 
     // Analyze the pattern and calculate the recommended interval
     const recommendedDays = this.analyzeIntervalPattern(intervals);
-    console.log('Recommended days:', recommendedDays);
     // Convert to appropriate unit
     return this.convertDaysToInterval(recommendedDays);
   }
