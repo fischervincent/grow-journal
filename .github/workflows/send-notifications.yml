@@ -15,11 +15,45 @@ jobs:
         run: |
           echo "🔔 Triggering plant care notification job at $(date)"
           
-          # Call the Vercel API endpoint
+          # Check if required secrets are set
+          if [ -z "${{ secrets.VERCEL_URL }}" ]; then
+            echo "❌ ERROR: VERCEL_URL secret is not set"
+            echo "Please add VERCEL_URL to your GitHub repository secrets"
+            exit 1
+          fi
+          
+          if [ -z "${{ secrets.CRON_SECRET }}" ]; then
+            echo "❌ ERROR: CRON_SECRET secret is not set"
+            echo "Please add CRON_SECRET to your GitHub repository secrets"
+            exit 1
+          fi
+          
+          echo "✅ Secrets validated"
+          echo "🌐 Target URL: ${{ secrets.VERCEL_URL }}/api/notifications/trigger"
+          
+          # Call the Vercel API endpoint with verbose output
+          echo "📡 Making HTTP request..."
           response=$(curl -s -w "\n%{http_code}" -X GET \
             "${{ secrets.VERCEL_URL }}/api/notifications/trigger" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            -H "Content-Type: application/json")
+            -H "Content-Type: application/json" \
+            --connect-timeout 30 \
+            --max-time 60 \
+            2>&1)
+          
+          curl_exit_code=$?
+          
+          if [ $curl_exit_code -ne 0 ]; then
+            echo "❌ curl command failed with exit code: $curl_exit_code"
+            echo "📄 curl output: $response"
+            case $curl_exit_code in
+              6) echo "💡 Could not resolve host - check VERCEL_URL format" ;;
+              7) echo "💡 Failed to connect to host - check if Vercel app is deployed" ;;
+              28) echo "💡 Request timeout - Vercel function may be slow to respond" ;;
+              *) echo "💡 See curl exit codes: https://curl.se/libcurl/c/libcurl-errors.html" ;;
+            esac
+            exit 1
+          fi
           
           # Extract status code and response body
           http_code=$(echo "$response" | tail -n1)
@@ -32,8 +66,21 @@ jobs:
           if [ "$http_code" -eq 200 ]; then
             echo "✅ Notification job triggered successfully"
             echo "ℹ️  Check Vercel function logs for email delivery status"
+          elif [ "$http_code" -eq 401 ]; then
+            echo "❌ Unauthorized (401) - CRON_SECRET mismatch"
+            echo "💡 Make sure CRON_SECRET is the same in GitHub and Vercel"
+            exit 1
+          elif [ "$http_code" -eq 404 ]; then
+            echo "❌ Not Found (404) - API endpoint not found"
+            echo "💡 Check that /api/notifications/trigger exists and is deployed"
+            exit 1
+          elif [ "$http_code" -eq 500 ]; then
+            echo "❌ Server Error (500) - Vercel function error"
+            echo "💡 Check Vercel function logs for detailed error information"
+            echo "📄 Error response: $response_body"
+            exit 1
           else
-            echo "❌ Failed to trigger notification job"
+            echo "❌ Failed to trigger notification job (HTTP $http_code)"
             echo "📄 Error response: $response_body"
             exit 1
           fi
