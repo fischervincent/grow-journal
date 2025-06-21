@@ -4,7 +4,7 @@ import type { PlantEventTypeReminderConfig } from "@/core/repositories/plant-rem
 import { getUserPlantsWithPhotos } from "../plants/get-user-plants";
 import { getPlantReminders } from "./get-plant-reminders";
 import { getPlantReminderConfigs } from "./get-plant-reminder-configs";
-import { calculateSmartInterval } from "./calculate-smart-interval";
+import { getPlantReminderRepository } from "@/lib/repositories/plant-reminder-repository-factory";
 import { getAuthenticatedUserId } from "../auth-helper";
 
 interface PlantWithLastEvents {
@@ -42,7 +42,7 @@ export async function calculateInitialPlantSettings({
   mode,
 }: InitialPlantSettingsInput): Promise<[PlantReminderSetting[], string | null]> {
   try {
-    await getAuthenticatedUserId(); // Ensure user is authenticated
+    const userId = await getAuthenticatedUserId();
 
     // Load all required data in parallel
     const [
@@ -61,6 +61,7 @@ export async function calculateInitialPlantSettings({
 
     const typedPlants = plants as PlantWithLastEvents[];
     const plantSettings: PlantReminderSetting[] = [];
+    const reminderRepository = getPlantReminderRepository();
 
     // Helper function to calculate next reminder date
     const calculateNextReminderDate = (
@@ -142,22 +143,23 @@ export async function calculateInitialPlantSettings({
           const configToUse = useDefault ? defaultConfig : { reminderType, intervalValue, intervalUnit };
 
           if (configToUse.reminderType === "smart") {
-            // Calculate smart interval
+            // Calculate smart interval using the repository directly
             try {
-              const [smartResult, smartError] = await calculateSmartInterval({
-                plantId: plant.id,
+              const smartInterval = await reminderRepository.calculateSmartReminderInterval(
+                plant.id,
                 eventTypeId,
-              });
+                userId
+              );
 
-              if (smartError || !smartResult) {
+              if (!smartInterval) {
                 // Smart calculation failed, use fallback
                 hasSmartIssue = true;
                 reminderDate = calculateNextReminderDate(plant, intervalValue, intervalUnit);
               } else {
                 // Use smart calculation
-                intervalValue = smartResult.intervalValue;
-                intervalUnit = smartResult.intervalUnit;
-                reminderDate = smartResult.nextReminderDate.toISOString().slice(0, 10);
+                intervalValue = smartInterval.intervalValue;
+                intervalUnit = smartInterval.intervalUnit;
+                reminderDate = calculateNextReminderDate(plant, smartInterval.intervalValue, smartInterval.intervalUnit);
               }
             } catch {
               // Smart calculation failed, use fallback

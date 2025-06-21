@@ -745,7 +745,7 @@ export class DrizzlePlantReminderRepository implements PlantReminderRepository {
       })
       .from(plantReminders)
       .innerJoin(plants, eq(plantReminders.plantId, plants.id))
-      .innerJoin(plantEventTypes, eq(plantReminders.plantEventTypeId, plantEventTypes.id))
+      .innerJoin(plantEvents, eq(plantReminders.plantEventTypeId, plantEvents.id))
       .where(and(...conditions))
       .orderBy(desc(plantReminders.scheduledAt));
 
@@ -855,6 +855,16 @@ export class DrizzlePlantReminderRepository implements PlantReminderRepository {
       .delete(plantReminders)
       .where(and(
         eq(plantReminders.id, reminderId),
+        eq(plantReminders.userId, userId)
+      ));
+  }
+
+  async deleteRemindersByPlantAndEventType(plantId: string, eventTypeId: string, userId: string): Promise<void> {
+    await this.db
+      .delete(plantReminders)
+      .where(and(
+        eq(plantReminders.plantId, plantId),
+        eq(plantReminders.plantEventTypeId, eventTypeId),
         eq(plantReminders.userId, userId)
       ));
   }

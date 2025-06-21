@@ -4,6 +4,7 @@ import { getAuthenticatedUserId } from "./auth-helper";
 import { getPlantEventRepository } from "@/lib/repositories/plant-event-repository-factory";
 import { getPlantEventTypeRepository } from "@/lib/repositories/plant-event-type-repository-factory";
 import { getPlantRepository } from "@/lib/repositories/plant-repository-factory";
+import { createPlantReminderScheduler } from "@/core/domain/plant-reminder-scheduler";
 import { revalidatePath } from "next/cache";
 
 interface SubmitPlantEventInput {
@@ -49,6 +50,20 @@ export async function submitPlantEvent(input: SubmitPlantEventInput) {
     }, userId);
 
     await plantRepository.update(input.plantId, userId, { lastDateByEvents });
+
+    // Handle reminder scheduling using the domain service
+    try {
+      const reminderScheduler = createPlantReminderScheduler();
+
+      await reminderScheduler.scheduleNextReminder(
+        input.plantId,
+        input.eventId,
+        userId
+      );
+    } catch (reminderError) {
+      // Log the error but don't fail the main operation
+      console.error("Failed to schedule next reminder:", reminderError);
+    }
 
     revalidatePath(`/plants`);
 

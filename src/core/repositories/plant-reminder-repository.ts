@@ -135,6 +135,7 @@ export interface PlantReminderRepository {
   createPlantReminder(plantId: string, plantEventTypeId: string, scheduledAt: Date, userId: string): Promise<PlantReminder>;
   updateReminderScheduledDate(reminderId: string, scheduledAt: Date, userId: string): Promise<PlantReminder>;
   deleteReminder(reminderId: string, userId: string): Promise<void>;
+  deleteRemindersByPlantAndEventType(plantId: string, eventTypeId: string, userId: string): Promise<void>;
   completeReminder(reminderId: string, userId: string): Promise<PlantReminder>;
   snoozeReminder(reminderId: string, snoozedUntil: Date, userId: string): Promise<PlantReminder>;
 
