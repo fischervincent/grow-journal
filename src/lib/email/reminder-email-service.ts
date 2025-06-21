@@ -38,7 +38,7 @@ export async function sendReminderEmail(data: ReminderEmailData): Promise<void> 
 
     // Send email via Resend
     const result = await resend.emails.send({
-      from: process.env.EMAIL_FROM || 'Plant Care <noreply@yourapp.com>',
+      from: process.env.EMAIL_FROM || 'Plant Care <grow-journal@resend.dev>',
       to: data.email,
       subject: emailSubject,
       html: emailHtml,

@@ -5,6 +5,7 @@ import {
   Heading,
   Html,
   Img,
+  Link,
   Preview,
   Row,
   Section,
@@ -25,6 +26,11 @@ export default function PlantCareReminderEmail({
   reminderData,
   userInfo,
 }: PlantCareReminderEmailProps) {
+  // Base URL for the application
+  const baseUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : process.env.NEXTAUTH_URL || "http://localhost:3000";
+
   // Generate preview text
   const previewText =
     reminderData.pendingReminders === 1
@@ -67,60 +73,78 @@ export default function PlantCareReminderEmail({
         <Container style={container}>
           {/* Header */}
           <Section style={header}>
-            <Text style={headerEmoji}>🌱</Text>
-            <Heading style={headerTitle}>Daily Plant Care</Heading>
-            <Text style={headerSubtitle}>Your plants need attention today</Text>
+            <Link href={`${baseUrl}/reminders`} style={headerLink}>
+              <Text style={headerEmoji}>🌱</Text>
+              <Heading style={headerTitle}>Daily Plant Care</Heading>
+              <Text style={headerSubtitle}>
+                Your plants need attention today
+              </Text>
+            </Link>
           </Section>
 
           {/* Summary Section */}
           <Section style={summarySection}>
-            <Heading style={summaryTitle}>Today&apos;s Summary</Heading>
-            <Text style={summaryTextStyle}>{summaryText}</Text>
-            <Text style={summaryDetails}>
-              {reminderData.pendingReminders} of {reminderData.totalReminders}{" "}
-              tasks remaining
-            </Text>
+            <Link href={`${baseUrl}/reminders`} style={summaryLink}>
+              <Heading style={summaryTitle}>Today&apos;s Summary</Heading>
+              <Text style={summaryTextStyle}>{summaryText}</Text>
+              <Text style={summaryDetails}>
+                {reminderData.pendingReminders} of {reminderData.totalReminders}{" "}
+                tasks remaining
+              </Text>
+            </Link>
           </Section>
 
           {/* Plant Cards */}
           <Section style={plantsSection}>
             {reminderData.plants.map((plant) => (
               <Section key={plant.plantId} style={plantCard}>
-                <Row>
-                  <Column style={plantImageColumn}>
-                    {plant.plantPhotoUrl ? (
-                      <Img
-                        src={plant.plantPhotoUrl}
-                        alt={plant.plantName}
-                        style={plantImage}
-                      />
-                    ) : (
-                      <Text style={plantImagePlaceholder}>🌱</Text>
-                    )}
-                  </Column>
-                  <Column style={plantInfoColumn}>
-                    <Heading style={plantName}>{plant.plantName}</Heading>
-                    <Section style={eventTagsSection}>
-                      {plant.events.map((event) => (
-                        <Text
-                          key={event.reminderId}
-                          style={{
-                            ...eventTag,
-                            backgroundColor: `${event.eventTypeColor}20`,
-                            color: event.eventTypeColor,
-                            border: `1px solid ${event.eventTypeColor}40`,
-                          }}
-                        >
-                          {event.eventTypeName}
-                          {event.isCompleted && " ✓"}
-                          {event.isOverdue && " (overdue)"}
-                        </Text>
-                      ))}
-                    </Section>
-                  </Column>
-                </Row>
+                <Link
+                  href={`${baseUrl}/plants/${plant.plantSlug}`}
+                  style={plantLink}
+                >
+                  <Row>
+                    <Column style={plantImageColumn}>
+                      {plant.plantPhotoUrl ? (
+                        <Img
+                          src={plant.plantPhotoUrl}
+                          alt={plant.plantName}
+                          style={plantImage}
+                        />
+                      ) : (
+                        <Text style={plantImagePlaceholder}>🌱</Text>
+                      )}
+                    </Column>
+                    <Column style={plantInfoColumn}>
+                      <Heading style={plantName}>{plant.plantName}</Heading>
+                      <Section style={eventTagsSection}>
+                        {plant.events.map((event) => (
+                          <Text
+                            key={event.reminderId}
+                            style={{
+                              ...eventTag,
+                              backgroundColor: `${event.eventTypeColor}20`,
+                              color: event.eventTypeColor,
+                              border: `1px solid ${event.eventTypeColor}40`,
+                            }}
+                          >
+                            {event.eventTypeName}
+                            {event.isCompleted && " ✓"}
+                            {event.isOverdue && " (overdue)"}
+                          </Text>
+                        ))}
+                      </Section>
+                    </Column>
+                  </Row>
+                </Link>
               </Section>
             ))}
+          </Section>
+
+          {/* Call to Action */}
+          <Section style={ctaSection}>
+            <Link href={`${baseUrl}/reminders`} style={ctaButton}>
+              <Text style={ctaButtonText}>View All Reminders</Text>
+            </Link>
           </Section>
 
           {/* Footer */}
@@ -130,7 +154,9 @@ export default function PlantCareReminderEmail({
               timezone ({userInfo.timezone})
             </Text>
             <Text style={footerText}>
-              Manage your notification settings in the app
+              <Link href={`${baseUrl}/settings`} style={footerLink}>
+                Manage your notification settings
+              </Link>
             </Text>
           </Section>
         </Container>
@@ -161,6 +187,12 @@ const header = {
   textAlign: "center" as const,
 };
 
+const headerLink = {
+  color: "#ffffff",
+  textDecoration: "none",
+  display: "block",
+};
+
 const headerEmoji = {
   fontSize: "32px",
   margin: "0 0 10px 0",
@@ -182,10 +214,17 @@ const headerSubtitle = {
 
 const summarySection = {
   backgroundColor: "#ffffff",
-  padding: "20px",
+  padding: "0",
   borderLeft: "4px solid #22c55e",
   margin: "0 20px 20px 20px",
   borderRadius: "0 6px 6px 0",
+};
+
+const summaryLink = {
+  color: "inherit",
+  textDecoration: "none",
+  display: "block",
+  padding: "20px",
 };
 
 const summaryTitle = {
@@ -214,10 +253,17 @@ const plantsSection = {
 const plantCard = {
   backgroundColor: "#ffffff",
   borderRadius: "8px",
-  padding: "15px",
+  padding: "0",
   marginBottom: "15px",
   boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
   border: "1px solid #e5e7eb",
+};
+
+const plantLink = {
+  color: "inherit",
+  textDecoration: "none",
+  display: "block",
+  padding: "15px",
 };
 
 const plantImageColumn = {
@@ -269,6 +315,27 @@ const eventTag = {
   margin: "2px 4px 2px 0",
 };
 
+const ctaSection = {
+  textAlign: "center" as const,
+  margin: "30px 20px",
+};
+
+const ctaButton = {
+  backgroundColor: "#22c55e",
+  borderRadius: "6px",
+  padding: "12px 24px",
+  color: "#ffffff",
+  textDecoration: "none",
+  fontWeight: "bold",
+  display: "inline-block",
+};
+
+const ctaButtonText = {
+  color: "#ffffff",
+  fontSize: "16px",
+  margin: "0",
+};
+
 const footer = {
   textAlign: "center" as const,
   margin: "20px 20px 0 20px",
@@ -280,4 +347,9 @@ const footerText = {
   color: "#6b7280",
   fontSize: "14px",
   margin: "0 0 8px 0",
+};
+
+const footerLink = {
+  color: "#22c55e",
+  textDecoration: "underline",
 };
