@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     const repository = getNotificationReminderRepository();
     const usersToNotify = await repository.findUsersForNotification();
 
-    console.log(`📊 Found ${usersToNotify.length} users ready for notifications`);
+    console.warn(`📊 Found ${usersToNotify.length} users ready for notifications`);
 
     const results = [];
     const baseUrl = process.env.VERCEL_URL
