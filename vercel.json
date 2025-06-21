@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/cron/send-notifications",
+      "path": "/api/cron/find-users-for-notification",
       "schedule": "0 * * * *"
     }
   ]
