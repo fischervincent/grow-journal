@@ -14,6 +14,7 @@ import { Check, Plus, X } from "lucide-react";
 import { useState } from "react";
 import { submitPlantEventType } from "../../server-functions/plantEventTypes/create-plant-event-type";
 import { toast } from "sonner";
+import { ButtonWithConfirmation } from "@/components/ui/button-with-confirmation";
 import { submitPlantEventTypeUpdate } from "@/app/server-functions/plantEventTypes/update-plant-event-type";
 import { submitPlantEventTypeDeletion } from "@/app/server-functions/plantEventTypes/delete-plant-event-type";
 import { ReminderConfigForm } from "./reminder-config-form";
@@ -261,14 +262,19 @@ export const PlantEventTypeList = ({
                     >
                       Edit
                     </Button>
-                    <Button
+                    <ButtonWithConfirmation
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDeleteEventType(eventType)}
+                      onConfirm={() => handleDeleteEventType(eventType)}
+                      dialogTitle="Delete Event Type"
+                      dialogDescription={`Are you sure you want to delete "${eventType.name}"? This will also delete all events of this type and cannot be undone.`}
+                      confirmText="Delete"
+                      cancelText="Cancel"
                       className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                      longPressEnabled={false}
                     >
                       Delete
-                    </Button>
+                    </ButtonWithConfirmation>
                   </div>
                 </div>
                 <ReminderConfigForm
