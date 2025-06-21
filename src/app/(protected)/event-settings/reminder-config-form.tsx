@@ -14,8 +14,9 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
+import { FormErrorList, FieldError } from "@/components/ui/form-error";
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
+import { useFormError } from "@/hooks/use-form-error";
 import { createReminderConfig } from "@/app/server-functions/plantEventTypes/create-reminder-config";
 import { updateReminderConfig } from "@/app/server-functions/plantEventTypes/update-reminder-config";
 import { deleteReminderConfig } from "@/app/server-functions/plantEventTypes/delete-reminder-config";
@@ -72,23 +73,41 @@ export function ReminderConfigForm({
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [showPlantSettings, setShowPlantSettings] = useState(false);
-  const [formData, setFormData] = useState({
-    isEnabled: false,
-    reminderType: "fixed" as "fixed" | "smart",
+  const [formData, setFormData] = useState<{
+    isEnabled: boolean;
+    reminderType: "fixed" | "smart";
+    intervalValue: number | string;
+    intervalUnit: string;
+  }>({
+    isEnabled: true,
+    reminderType: "fixed",
     intervalValue: 1,
     intervalUnit: "months",
   });
+
+  const {
+    errors,
+    isSubmitting,
+    hasGeneralErrors,
+    setError,
+    setFieldError,
+    clearError,
+    clearAllErrors,
+    getFieldError,
+    withSubmission,
+  } = useFormError();
 
   // Load existing config
   useEffect(() => {
     const loadConfig = async () => {
       setIsLoading(true);
+      clearAllErrors();
       const [existingConfig, error] = await getReminderConfig({
         plantEventTypeId,
       });
 
       if (error) {
-        toast.error("Failed to load reminder settings");
+        setError("Failed to load reminder settings");
         setIsLoading(false);
         return;
       }
@@ -107,10 +126,24 @@ export function ReminderConfigForm({
     };
 
     loadConfig();
-  }, [plantEventTypeId]);
+  }, [plantEventTypeId, clearAllErrors, setError]);
 
   const handleSave = async () => {
-    try {
+    // Validate interval value
+    const intervalValue =
+      typeof formData.intervalValue === "string"
+        ? parseInt(formData.intervalValue)
+        : formData.intervalValue;
+
+    if (formData.isEnabled && (!intervalValue || intervalValue < 1)) {
+      setFieldError(
+        "intervalValue",
+        "Please enter a valid interval value (1 or greater)"
+      );
+      return;
+    }
+
+    const result = await withSubmission(async () => {
       if (config) {
         // Update existing config
         const [updatedConfig, error] = await updateReminderConfig({
@@ -118,78 +151,84 @@ export function ReminderConfigForm({
           plantEventTypeId: plantEventTypeId,
           isEnabled: formData.isEnabled,
           reminderType: formData.reminderType,
-          intervalValue: formData.intervalValue,
+          intervalValue: intervalValue || 1,
           intervalUnit: formData.intervalUnit,
         });
 
         if (error) {
-          toast.error("Failed to update reminder settings");
-          return;
+          throw new Error("Failed to update reminder settings");
         }
 
-        setConfig(updatedConfig);
-        onConfigChanged?.(updatedConfig);
-        toast.success("Reminder settings updated");
-        setIsEditing(false);
-
-        // Show plant settings dialog for further configuration
-        if (updatedConfig?.isEnabled) {
-          setShowPlantSettings(true);
-        }
+        return updatedConfig;
       } else {
         // For new configs, show plant settings dialog first
         // The config will be created when the user saves plant settings
         if (formData.isEnabled) {
-          setShowPlantSettings(true);
+          return "show-plant-settings";
         } else {
           // If disabled, create the config directly
           const [newConfig, error] = await createReminderConfig({
             plantEventTypeId,
             isEnabled: false,
             reminderType: formData.reminderType,
-            intervalValue: formData.intervalValue,
+            intervalValue: intervalValue || 1,
             intervalUnit: formData.intervalUnit,
           });
 
           if (error) {
-            toast.error("Failed to create reminder settings");
-            return;
+            throw new Error("Failed to create reminder settings");
           }
 
-          setConfig(newConfig);
-          onConfigChanged?.(newConfig);
-          toast.success("Reminder settings created");
-          setIsEditing(false);
+          return newConfig;
         }
       }
-    } catch {
-      toast.error("Failed to save reminder settings");
+    });
+
+    if (result) {
+      if (result === "show-plant-settings") {
+        setShowPlantSettings(true);
+      } else {
+        setConfig(result);
+        onConfigChanged?.(result);
+        setIsEditing(false);
+
+        // Show plant settings dialog for further configuration
+        if (result?.isEnabled) {
+          setShowPlantSettings(true);
+        }
+      }
     }
   };
 
   const handlePlantSettingsSave = async () => {
+    // Validate interval value
+    const intervalValue =
+      typeof formData.intervalValue === "string"
+        ? parseInt(formData.intervalValue)
+        : formData.intervalValue;
+
     // If this is a new config (no existing config), create it now
     if (!config) {
-      try {
+      const result = await withSubmission(async () => {
         const [newConfig, error] = await createReminderConfig({
           plantEventTypeId,
           isEnabled: formData.isEnabled,
           reminderType: formData.reminderType,
-          intervalValue: formData.intervalValue,
+          intervalValue: intervalValue || 1,
           intervalUnit: formData.intervalUnit,
         });
 
         if (error) {
-          toast.error("Failed to create reminder settings");
-          return;
+          throw new Error("Failed to create reminder settings");
         }
 
-        setConfig(newConfig);
-        onConfigChanged?.(newConfig);
+        return newConfig;
+      });
+
+      if (result) {
+        setConfig(result);
+        onConfigChanged?.(result);
         setIsEditing(false);
-        toast.success("Reminder settings created with plant configurations");
-      } catch {
-        toast.error("Failed to create reminder settings");
       }
     }
   };
@@ -197,23 +236,23 @@ export function ReminderConfigForm({
   const handleDelete = async () => {
     if (!config) return;
 
-    try {
+    const result = await withSubmission(async () => {
       const [, error] = await deleteReminderConfig({
         configId: config.id,
         plantEventTypeId: plantEventTypeId,
       });
 
       if (error) {
-        toast.error("Failed to delete reminder settings");
-        return;
+        throw new Error("Failed to delete reminder settings");
       }
 
+      return true;
+    });
+
+    if (result) {
       setConfig(null);
       onConfigChanged?.(null);
       setIsEditing(false);
-      toast.success("Reminder settings deleted");
-    } catch {
-      toast.error("Failed to delete reminder settings");
     }
   };
 
@@ -227,12 +266,13 @@ export function ReminderConfigForm({
       });
     } else {
       setFormData({
-        isEnabled: false,
+        isEnabled: true,
         reminderType: "fixed",
         intervalValue: 1,
         intervalUnit: "months",
       });
     }
+    clearAllErrors();
     setIsEditing(false);
   };
 
@@ -255,6 +295,29 @@ export function ReminderConfigForm({
         <div className="flex items-center gap-2 text-sm text-muted-foreground px-4 py-3">
           <Clock className="h-4 w-4 animate-spin" />
           Loading reminder settings...
+        </div>
+      </div>
+    );
+  }
+
+  if (hasGeneralErrors && !isEditing) {
+    return (
+      <div className="border-t border-gray-100">
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-2 text-sm text-red-600">
+            <BellOff className="h-4 w-4" />
+            {errors[0]?.message}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              clearAllErrors();
+              setIsEditing(true);
+            }}
+          >
+            Try Again
+          </Button>
         </div>
       </div>
     );
@@ -432,18 +495,30 @@ export function ReminderConfigForm({
                 </Label>
                 <div className="flex items-center gap-2">
                   <Label className="text-sm whitespace-nowrap">Every</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    value={formData.intervalValue}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        intervalValue: parseInt(e.target.value) || 1,
-                      }))
-                    }
-                    className="w-20"
-                  />
+                  <div>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={formData.intervalValue || ""}
+                      onChange={(e) => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          intervalValue:
+                            e.target.value === ""
+                              ? ""
+                              : parseInt(e.target.value) || "",
+                        }));
+                        // Clear field error when user starts typing
+                        if (getFieldError("intervalValue")) {
+                          clearError("intervalValue");
+                        }
+                      }}
+                      className={`w-20 ${
+                        getFieldError("intervalValue") ? "border-red-300" : ""
+                      }`}
+                    />
+                    <FieldError message={getFieldError("intervalValue")} />
+                  </div>
                   <Select
                     value={formData.intervalUnit}
                     onValueChange={(value) =>
@@ -466,12 +541,19 @@ export function ReminderConfigForm({
             </>
           )}
 
+          <FormErrorList errors={errors} onDismiss={clearAllErrors} />
+
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" size="sm" onClick={handleCancel}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCancel}
+              disabled={isSubmitting}
+            >
               Cancel
             </Button>
-            <Button size="sm" onClick={handleSave}>
-              {config ? "Update" : "Create"}
+            <Button size="sm" onClick={handleSave} disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : config ? "Update" : "Create"}
             </Button>
           </div>
         </div>
@@ -489,7 +571,10 @@ export function ReminderConfigForm({
             plantEventTypeName,
             isEnabled: formData.isEnabled,
             reminderType: formData.reminderType,
-            intervalValue: formData.intervalValue,
+            intervalValue:
+              typeof formData.intervalValue === "string"
+                ? parseInt(formData.intervalValue) || 1
+                : formData.intervalValue,
             intervalUnit: formData.intervalUnit,
             createdAt: new Date(),
             updatedAt: new Date(),
