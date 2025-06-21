@@ -31,10 +31,9 @@ export class DrizzleNotificationReminderRepository implements NotificationRemind
             sql`${notificationSettings.pushEnabled} = true`,
             sql`${notificationSettings.emailEnabled} = true`
           ),
-          // Current time in user's timezone should match their notification time
-          // This compares the current time converted to user's timezone with their preferred notification time
-          sql`EXTRACT(HOUR FROM (NOW() AT TIME ZONE ${notificationSettings.timezone})) || ':' || 
-              LPAD(EXTRACT(MINUTE FROM (NOW() AT TIME ZONE ${notificationSettings.timezone}))::text, 2, '0') = 
+          // Current hour in user's timezone should match their notification hour
+          // This compares only the hour part, so notifications trigger for the entire hour
+          sql`EXTRACT(HOUR FROM (NOW() AT TIME ZONE ${notificationSettings.timezone}))::text || ':00' = 
               ${notificationSettings.notificationTime}`
         )
       );
