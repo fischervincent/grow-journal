@@ -5,7 +5,6 @@ import { sendReminderEmail } from '@/lib/email/reminder-email-service';
 interface UserNotificationRequest {
   userId: string;
   email: string;
-  pushEnabled: boolean;
   emailEnabled: boolean;
   notificationTime: string;
   timezone: string;
@@ -32,7 +31,17 @@ export async function POST(request: NextRequest) {
     }
 
     const userInfo: UserNotificationRequest = await request.json();
-    console.log(`🔄 Processing notification for user ${userInfo.userId} (${userInfo.email})`);
+    console.log(`🔄 Processing email notification for user ${userInfo.userId} (${userInfo.email})`);
+
+    // Check if email notifications are enabled - return early if not
+    if (!userInfo.emailEnabled) {
+      console.log(`ℹ️ Email notifications disabled for user ${userInfo.userId}`);
+      return NextResponse.json({
+        success: true,
+        message: 'Email notifications disabled',
+        skipped: true
+      });
+    }
 
     // Get today's reminders for this user
     const [remindersByDay, error] = await getRemindersByDayForUser(userInfo.userId, 1); // Just today
@@ -68,41 +77,33 @@ export async function POST(request: NextRequest) {
 
     console.log(`📧 Sending email to ${userInfo.email} - ${todayReminders.pendingReminders} pending reminders`);
 
-    // Send email if email notifications are enabled
-    if (userInfo.emailEnabled) {
-      await sendReminderEmail({
-        email: userInfo.email,
-        reminderData: todayReminders,
-        userInfo: {
-          timezone: userInfo.timezone,
-          notificationTime: userInfo.notificationTime,
-        },
-      });
+    // Send email notification
+    await sendReminderEmail({
+      email: userInfo.email,
+      reminderData: todayReminders,
+      userInfo: {
+        timezone: userInfo.timezone,
+        notificationTime: userInfo.notificationTime,
+      },
+    });
 
-      console.log(`✅ Email sent successfully to ${userInfo.email}`);
-    }
-
-    // TODO: Send push notification if push notifications are enabled
-    if (userInfo.pushEnabled) {
-      console.log(`🔔 Push notification would be sent to user ${userInfo.userId} (not implemented yet)`);
-    }
+    console.log(`✅ Email sent successfully to ${userInfo.email}`);
 
     return NextResponse.json({
       success: true,
-      message: `Notification sent to ${userInfo.email}`,
+      message: `Email notification sent to ${userInfo.email}`,
       data: {
         totalReminders: todayReminders.totalReminders,
         pendingReminders: todayReminders.pendingReminders,
         completedReminders: todayReminders.completedReminders,
         plantsCount: todayReminders.plants.length,
         eventTypes: Object.keys(todayReminders.eventTypeSummary),
-        emailSent: userInfo.emailEnabled,
-        pushSent: false, // Not implemented yet
+        emailSent: true,
       },
     });
 
   } catch (error) {
-    console.error('❌ Send user notification failed:', error);
+    console.error('❌ Send email notification failed:', error);
 
     return NextResponse.json({
       success: false,

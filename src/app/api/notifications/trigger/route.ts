@@ -24,9 +24,12 @@ export async function GET(request: NextRequest) {
     console.log('🔔 Starting notification trigger at:', new Date().toISOString());
 
     const repository = getNotificationReminderRepository();
-    const usersToNotify = await repository.findUsersForNotification();
+    const allUsers = await repository.findUsersForNotification();
 
-    console.warn(`📊 Found ${usersToNotify.length} users ready for notifications`);
+    // Filter to only users with email notifications enabled
+    const usersToEmail = allUsers.filter(user => user.emailEnabled);
+
+    console.warn(`📊 Found ${allUsers.length} users ready for notifications, ${usersToEmail.length} with email enabled`);
 
     const results = [];
     const baseUrl = process.env.VERCEL_URL
@@ -34,11 +37,11 @@ export async function GET(request: NextRequest) {
       : process.env.NEXTAUTH_URL || 'http://localhost:3000';
 
     // Send notification to each user
-    for (const user of usersToNotify) {
+    for (const user of usersToEmail) {
       try {
         console.log(`📧 Processing notification for user ${user.userId} (${user.email})`);
 
-        const response = await fetch(`${baseUrl}/api/notifications/send-user`, {
+        const response = await fetch(`${baseUrl}/api/notifications/send-reminder-notification-email`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -87,9 +90,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Triggered notifications for ${usersToNotify.length} users`,
+      message: `Triggered notifications for ${usersToEmail.length} users`,
       summary: {
-        total: usersToNotify.length,
+        total: usersToEmail.length,
         successful: successCount,
         failed: failureCount,
         skipped: skippedCount,
