@@ -13,10 +13,22 @@ interface UserNotificationRequest {
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify the request is from our cron job
+    // Verify the request is from our notification trigger
     const authHeader = request.headers.get('authorization');
-    if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const expectedAuth = `Bearer ${process.env.CRON_SECRET}`;
+
+    if (!process.env.CRON_SECRET) {
+      console.error('❌ CRON_SECRET environment variable not set');
+      return NextResponse.json({
+        error: 'Server configuration error'
+      }, { status: 500 });
+    }
+
+    if (!authHeader || authHeader !== expectedAuth) {
+      console.error('❌ Unauthorized access attempt to send user notification');
+      return NextResponse.json({
+        error: 'Unauthorized'
+      }, { status: 401 });
     }
 
     const userInfo: UserNotificationRequest = await request.json();
