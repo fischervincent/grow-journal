@@ -1,5 +1,84 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getNotificationReminderRepository } from '@/lib/repositories/notification-reminder-repository-factory';
+import { getRemindersByDayForUser } from '@/app/server-functions/get-reminders-by-day-for-user';
+import { sendReminderEmail } from '@/lib/email/reminder-email-service';
+
+// Extract the logic from send-reminder-notification-email endpoint
+async function processUserNotification(userInfo: {
+  userId: string;
+  email: string;
+  emailEnabled: boolean;
+  notificationTime: string;
+  timezone: string;
+}) {
+  console.log(`🔄 Processing email notification for user ${userInfo.userId} (${userInfo.email})`);
+
+  // Check if email notifications are enabled - return early if not
+  if (!userInfo.emailEnabled) {
+    console.log(`ℹ️ Email notifications disabled for user ${userInfo.userId}`);
+    return {
+      success: true,
+      message: 'Email notifications disabled',
+      skipped: true
+    };
+  }
+
+  // Get today's reminders for this user
+  const [remindersByDay, error] = await getRemindersByDayForUser(userInfo.userId, 1); // Just today
+
+  if (error) {
+    console.error(`❌ Failed to get reminders for user ${userInfo.userId}:`, error);
+    throw new Error(`Failed to get reminders: ${error}`);
+  }
+
+  if (!remindersByDay || remindersByDay.length === 0) {
+    console.log(`ℹ️ No reminders for user ${userInfo.userId} today`);
+    return {
+      success: true,
+      message: 'No reminders for today',
+      skipped: true
+    };
+  }
+
+  const todayReminders = remindersByDay[0];
+
+  // Only send if there are pending reminders
+  if (todayReminders.pendingReminders === 0) {
+    console.log(`ℹ️ All reminders completed for user ${userInfo.userId}`);
+    return {
+      success: true,
+      message: 'All reminders completed',
+      skipped: true
+    };
+  }
+
+  console.log(`📧 Sending email to ${userInfo.email} - ${todayReminders.pendingReminders} pending reminders`);
+
+  // Send email notification
+  await sendReminderEmail({
+    email: userInfo.email,
+    reminderData: todayReminders,
+    userInfo: {
+      timezone: userInfo.timezone,
+      notificationTime: userInfo.notificationTime,
+    },
+  });
+
+  console.log(`✅ Email sent successfully to ${userInfo.email}`);
+
+  return {
+    success: true,
+    message: `Email notification sent to ${userInfo.email}`,
+    data: {
+      totalReminders: todayReminders.totalReminders,
+      pendingReminders: todayReminders.pendingReminders,
+      completedReminders: todayReminders.completedReminders,
+      plantsCount: todayReminders.plants.length,
+      eventTypes: Object.keys(todayReminders.eventTypeSummary),
+      emailSent: true,
+    },
+  };
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,44 +111,26 @@ export async function GET(request: NextRequest) {
     console.warn(`📊 Found ${allUsers.length} users ready for notifications, ${usersToEmail.length} with email enabled`);
 
     const results = [];
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : process.env.NEXTAUTH_URL || 'http://localhost:3000';
 
-    // Send notification to each user
+    // Send notification to each user - now calling the function directly instead of HTTP request
     for (const user of usersToEmail) {
       try {
         console.log(`📧 Processing notification for user ${user.userId} (${user.email})`);
 
-        const response = await fetch(`${baseUrl}/api/notifications/send-reminder-notification-email`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.CRON_SECRET}`,
-          },
-          body: JSON.stringify({
-            userId: user.userId,
-            email: user.email,
-            pushEnabled: user.pushEnabled,
-            emailEnabled: user.emailEnabled,
-            notificationTime: user.notificationTime,
-            timezone: user.timezone,
-          }),
+        const result = await processUserNotification({
+          userId: user.userId,
+          email: user.email,
+          emailEnabled: user.emailEnabled,
+          notificationTime: user.notificationTime,
+          timezone: user.timezone,
         });
 
-        const result = await response.json();
-
-        if (response.ok) {
-          if (result.skipped) {
-            console.log(`⏭️  Skipped notification for ${user.email}: ${result.message}`);
-            results.push({ userId: user.userId, email: user.email, success: true, skipped: true, reason: result.message });
-          } else {
-            console.log(`✅ Successfully processed notification for ${user.email}`);
-            results.push({ userId: user.userId, email: user.email, success: true, skipped: false });
-          }
+        if (result.skipped) {
+          console.log(`⏭️  Skipped notification for ${user.email}: ${result.message}`);
+          results.push({ userId: user.userId, email: user.email, success: true, skipped: true, reason: result.message });
         } else {
-          console.error(`❌ Failed to process notification for ${user.email}:`, result.error);
-          results.push({ userId: user.userId, email: user.email, success: false, error: result.error });
+          console.log(`✅ Successfully processed notification for ${user.email}`);
+          results.push({ userId: user.userId, email: user.email, success: true, skipped: false });
         }
       } catch (error) {
         console.error(`❌ Error processing notification for ${user.email}:`, error);
