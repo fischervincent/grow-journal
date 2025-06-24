@@ -50,11 +50,18 @@ export async function sendReminderEmail(data: ReminderEmailData): Promise<void> 
     }
 
     console.log(`✅ Email sent successfully to ${data.email} (ID: ${result.data?.id})`);
+
+    // Count unique plants with pending reminders for accurate logging
+    const plantsWithPendingReminders = data.reminderData.plants.filter(plant =>
+      plant.events.some(event => !event.isCompleted)
+    ).length;
+
     console.log('📊 Email data:', {
       email: data.email,
       totalReminders: data.reminderData.totalReminders,
       pendingReminders: data.reminderData.pendingReminders,
-      plantsCount: data.reminderData.plants.length,
+      totalPlants: data.reminderData.plants.length,
+      plantsWithPendingReminders: plantsWithPendingReminders,
       eventTypes: Object.keys(data.reminderData.eventTypeSummary),
     });
 
@@ -67,11 +74,16 @@ export async function sendReminderEmail(data: ReminderEmailData): Promise<void> 
 function generateEmailSubject(reminderData: RemindersByDay): string {
   const { pendingReminders } = reminderData;
 
+  // Count unique plants that have pending (uncompleted) events
+  const plantsWithPendingReminders = reminderData.plants.filter(plant =>
+    plant.events.some(event => !event.isCompleted)
+  ).length;
+
   if (pendingReminders === 0) {
     return "🌱 All your plants are up to date!";
-  } else if (pendingReminders === 1) {
+  } else if (plantsWithPendingReminders === 1) {
     return "🌱 1 plant needs your attention today";
   } else {
-    return `🌱 ${pendingReminders} plants need your attention today`;
+    return `🌱 ${plantsWithPendingReminders} plants need your attention today`;
   }
 } 

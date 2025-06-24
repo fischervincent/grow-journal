@@ -30,10 +30,14 @@ export default function PlantCareReminderEmail({
   const authBaseUrl = process.env.BETTER_AUTH_URL;
 
   // Generate preview text
+  const plantsWithPendingReminders = reminderData.plants.filter((plant) =>
+    plant.events.some((event) => !event.isCompleted)
+  ).length;
+
   const previewText =
-    reminderData.pendingReminders === 1
+    plantsWithPendingReminders === 1
       ? "1 plant needs your attention today"
-      : `${reminderData.pendingReminders} plants need your attention today`;
+      : `${plantsWithPendingReminders} plants need your attention today`;
 
   // Generate summary text
   const eventTypeSummary = Object.values(reminderData.eventTypeSummary);

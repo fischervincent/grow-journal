@@ -43,8 +43,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Get today's reminders for this user
-    const [remindersByDay, error] = await getRemindersByDayForUser(userInfo.userId, 1); // Just today
+    // Get reminders for the last 7 days (to include overdue) plus today
+    const [remindersByDay, error] = await getRemindersByDayForUser(userInfo.userId, 1, 7); // 1 day ahead, 7 days back
 
     if (error) {
       console.error(`❌ Failed to get reminders for user ${userInfo.userId}:`, error);
@@ -55,32 +55,91 @@ export async function POST(request: NextRequest) {
     }
 
     if (!remindersByDay || remindersByDay.length === 0) {
-      console.log(`ℹ️ No reminders for user ${userInfo.userId} today`);
+      console.log(`ℹ️ No reminders for user ${userInfo.userId} in the past week`);
       return NextResponse.json({
         success: true,
-        message: 'No reminders for today',
+        message: 'No reminders found',
         skipped: true
       });
     }
 
-    const todayReminders = remindersByDay[0];
+    // Find today's reminders and overdue reminders
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
 
-    // Only send if there are pending reminders
-    if (todayReminders.pendingReminders === 0) {
-      console.log(`ℹ️ All reminders completed for user ${userInfo.userId}`);
+    // Get all days with pending reminders (including overdue)
+    const pendingReminderDays = remindersByDay.filter(day => day.pendingReminders > 0);
+
+    if (pendingReminderDays.length === 0) {
+      console.log(`ℹ️ No pending reminders for user ${userInfo.userId}`);
       return NextResponse.json({
         success: true,
-        message: 'All reminders completed',
+        message: 'No pending reminders',
         skipped: true
       });
     }
 
-    console.log(`📧 Sending email to ${userInfo.email} - ${todayReminders.pendingReminders} pending reminders`);
+    // Calculate totals across all pending days
+    const totalPendingReminders = pendingReminderDays.reduce((sum, day) => sum + day.pendingReminders, 0);
+    const totalReminders = pendingReminderDays.reduce((sum, day) => sum + day.totalReminders, 0);
+    const totalCompletedReminders = pendingReminderDays.reduce((sum, day) => sum + day.completedReminders, 0);
+
+    // Combine event type summaries across all days
+    const combinedEventTypeSummary: Record<string, {
+      eventTypeName: string;
+      eventTypeColor: string;
+      total: number;
+      completed: number;
+    }> = {};
+    pendingReminderDays.forEach(day => {
+      Object.entries(day.eventTypeSummary).forEach(([eventTypeId, eventType]) => {
+        if (!combinedEventTypeSummary[eventTypeId]) {
+          combinedEventTypeSummary[eventTypeId] = {
+            eventTypeName: eventType.eventTypeName,
+            eventTypeColor: eventType.eventTypeColor,
+            total: 0,
+            completed: 0
+          };
+        }
+        combinedEventTypeSummary[eventTypeId].total += eventType.total;
+        combinedEventTypeSummary[eventTypeId].completed += eventType.completed;
+      });
+    });
+
+    // Get unique plants across all pending days
+    const allPlants = new Map();
+    pendingReminderDays.forEach(day => {
+      day.plants.forEach(plant => {
+        if (!allPlants.has(plant.plantId)) {
+          allPlants.set(plant.plantId, {
+            ...plant,
+            events: []
+          });
+        }
+        // Add events that have pending reminders
+        plant.events.filter(event => !event.isCompleted).forEach(event => {
+          allPlants.get(plant.plantId).events.push(event);
+        });
+      });
+    });
+
+    // Create a combined reminder data for email
+    const combinedReminderData = {
+      date: today,
+      dateLabel: "Today & Overdue",
+      totalReminders,
+      completedReminders: totalCompletedReminders,
+      pendingReminders: totalPendingReminders,
+      overdue: pendingReminderDays.some(day => day.overdue),
+      eventTypeSummary: combinedEventTypeSummary,
+      plants: Array.from(allPlants.values())
+    };
+
+    console.log(`📧 Sending email to ${userInfo.email} - ${totalPendingReminders} pending reminders (including overdue)`);
 
     // Send email notification
     await sendReminderEmail({
       email: userInfo.email,
-      reminderData: todayReminders,
+      reminderData: combinedReminderData,
       userInfo: {
         timezone: userInfo.timezone,
         notificationTime: userInfo.notificationTime,
@@ -93,12 +152,13 @@ export async function POST(request: NextRequest) {
       success: true,
       message: `Email notification sent to ${userInfo.email}`,
       data: {
-        totalReminders: todayReminders.totalReminders,
-        pendingReminders: todayReminders.pendingReminders,
-        completedReminders: todayReminders.completedReminders,
-        plantsCount: todayReminders.plants.length,
-        eventTypes: Object.keys(todayReminders.eventTypeSummary),
+        totalReminders,
+        pendingReminders: totalPendingReminders,
+        completedReminders: totalCompletedReminders,
+        plantsCount: allPlants.size,
+        eventTypes: Object.keys(combinedEventTypeSummary),
         emailSent: true,
+        includesOverdue: pendingReminderDays.some(day => day.overdue),
       },
     });
 

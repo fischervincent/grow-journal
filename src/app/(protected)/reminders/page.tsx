@@ -9,7 +9,13 @@ import { submitPlantEvent } from "@/app/server-functions/record-plant-event";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ButtonWithConfirmation } from "@/components/ui/button-with-confirmation";
-import { CheckCircle, Clock, AlertTriangle, CalendarDays } from "lucide-react";
+import {
+  CheckCircle,
+  Clock,
+  AlertTriangle,
+  CalendarDays,
+  Info,
+} from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -28,7 +34,7 @@ export default function RemindersPage() {
 
   const loadReminders = async () => {
     setLoading(true);
-    const [result, error] = await getRemindersByDay(14); // Load 2 weeks ahead
+    const [result, error] = await getRemindersByDay(14, 7); // Load 2 weeks ahead + 1 week back for overdue
     if (error) {
       console.error("Failed to load reminders:", error);
       toast.error("Failed to load reminders");
@@ -129,6 +135,25 @@ export default function RemindersPage() {
 
   const activeDays = remindersByDay.filter((day) => day.totalReminders > 0);
 
+  // Sort days to show overdue first, then today, then future days
+  const sortedActiveDays = activeDays.sort((a, b) => {
+    const today = new Date().toISOString().split("T")[0];
+
+    // Overdue items first
+    if (a.overdue && !b.overdue) return -1;
+    if (!a.overdue && b.overdue) return 1;
+
+    // Then today
+    if (a.date === today && b.date !== today) return -1;
+    if (a.date !== today && b.date === today) return 1;
+
+    // Then by date
+    return a.date.localeCompare(b.date);
+  });
+
+  // Check if there are any overdue reminders to show the notice
+  const hasOverdueReminders = sortedActiveDays.some((day) => day.overdue);
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
@@ -153,8 +178,24 @@ export default function RemindersPage() {
         </Card>
       ) : (
         <div className="space-y-6">
-          {activeDays.map((day) => (
-            <Card key={day.date} className="overflow-hidden">
+          {hasOverdueReminders && (
+            <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+              <Info className="w-4 h-4 flex-shrink-0" />
+              <span>
+                Only overdue reminders from the last 7 days are shown. Older
+                overdue items are not displayed.
+              </span>
+            </div>
+          )}
+
+          {sortedActiveDays.map((day) => (
+            <Card
+              key={day.date}
+              className={cn(
+                "overflow-hidden",
+                day.overdue && "border-red-200 bg-red-50/50"
+              )}
+            >
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">

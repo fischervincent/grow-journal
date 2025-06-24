@@ -52,25 +52,27 @@ interface ReminderWithDetails {
   eventTypeColor: string;
 }
 
-export async function getRemindersByDay(daysAhead: number = 7) {
+export async function getRemindersByDay(daysAhead: number = 7, daysBack: number = 7) {
   try {
     const userId = await getAuthenticatedUserId();
     const repository = getPlantReminderRepository();
 
-    // Get all active reminders for the next N days
+    // Get all active reminders for the date range (past + today + future)
     const today = startOfDay(new Date());
+    const startDate = addDays(today, -daysBack); // Go back in time
     const endDate = addDays(today, daysAhead);
 
     const allReminders = await repository.findPlantRemindersWithDetails(
       userId,
-      today,
+      startDate,
       endDate
     );
 
     // Group reminders by day
     const remindersByDay: Record<string, RemindersByDay> = {};
 
-    for (let i = 0; i < daysAhead; i++) {
+    // Create entries for past days, today, and future days
+    for (let i = -daysBack; i < daysAhead; i++) {
       const currentDate = addDays(today, i);
       const dateKey = format(currentDate, 'yyyy-MM-dd');
 
@@ -80,6 +82,10 @@ export async function getRemindersByDay(daysAhead: number = 7) {
         dateLabel = "Today";
       } else if (i === 1) {
         dateLabel = "Tomorrow";
+      } else if (i === -1) {
+        dateLabel = "Yesterday";
+      } else if (i < 0) {
+        dateLabel = format(currentDate, 'MMM d, yyyy') + " (overdue)";
       } else {
         dateLabel = format(currentDate, 'MMM d, yyyy');
       }
