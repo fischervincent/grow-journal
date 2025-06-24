@@ -27,9 +27,7 @@ export default function PlantCareReminderEmail({
   userInfo,
 }: PlantCareReminderEmailProps) {
   // Base URL for the application
-  const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const authBaseUrl = process.env.BETTER_AUTH_URL;
 
   // Generate preview text
   const previewText =
@@ -73,7 +71,7 @@ export default function PlantCareReminderEmail({
         <Container style={container}>
           {/* Header */}
           <Section style={header}>
-            <Link href={`${baseUrl}/reminders`} style={headerLink}>
+            <Link href={`${authBaseUrl}/reminders`} style={headerLink}>
               <Text style={headerEmoji}>🌱</Text>
               <Heading style={headerTitle}>Daily Plant Care</Heading>
               <Text style={headerSubtitle}>
@@ -84,7 +82,7 @@ export default function PlantCareReminderEmail({
 
           {/* Summary Section */}
           <Section style={summarySection}>
-            <Link href={`${baseUrl}/reminders`} style={summaryLink}>
+            <Link href={`${authBaseUrl}/reminders`} style={summaryLink}>
               <Heading style={summaryTitle}>Today&apos;s Summary</Heading>
               <Text style={summaryTextStyle}>{summaryText}</Text>
               <Text style={summaryDetails}>
@@ -99,7 +97,7 @@ export default function PlantCareReminderEmail({
             {reminderData.plants.map((plant) => (
               <Section key={plant.plantId} style={plantCard}>
                 <Link
-                  href={`${baseUrl}/plants/${plant.plantSlug}`}
+                  href={`${authBaseUrl}/plants/${plant.plantSlug}`}
                   style={plantLink}
                 >
                   <Row>
@@ -142,7 +140,7 @@ export default function PlantCareReminderEmail({
 
           {/* Call to Action */}
           <Section style={ctaSection}>
-            <Link href={`${baseUrl}/reminders`} style={ctaButton}>
+            <Link href={`${authBaseUrl}/reminders`} style={ctaButton}>
               <Text style={ctaButtonText}>View All Reminders</Text>
             </Link>
           </Section>
@@ -155,7 +153,7 @@ export default function PlantCareReminderEmail({
             </Text>
             <Text style={footerText}>
               <Link
-                href={`${baseUrl}/notification-settings`}
+                href={`${authBaseUrl}/notification-settings`}
                 style={footerLink}
               >
                 Manage your notification settings
