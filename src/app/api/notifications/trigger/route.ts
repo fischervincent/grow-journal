@@ -3,6 +3,9 @@ import { getNotificationReminderRepository } from '@/lib/repositories/notificati
 import { getRemindersByDayForUser } from '@/app/server-functions/get-reminders-by-day-for-user';
 import { sendReminderEmail } from '@/lib/email/reminder-email-service';
 
+// Simple configuration for small user base (~50 users)
+const MAX_PROCESSING_TIME = 50; // 50 seconds (leave 10s buffer for Hobby plan 60s limit)
+
 // Extract the logic from send-reminder-notification-email endpoint
 async function processUserNotification(userInfo: {
   userId: string;
@@ -100,6 +103,7 @@ export async function GET(request: NextRequest) {
       }, { status: 401 });
     }
 
+    const startTime = Date.now();
     console.log('🔔 Starting notification trigger at:', new Date().toISOString());
 
     const repository = getNotificationReminderRepository();
@@ -112,10 +116,18 @@ export async function GET(request: NextRequest) {
 
     const results = [];
 
-    // Send notification to each user - now calling the function directly instead of HTTP request
+    // Process all users sequentially (simple approach for ~50 users)
     for (const user of usersToEmail) {
+      // Check if we're approaching the time limit
+      const elapsedTime = (Date.now() - startTime) / 1000;
+      if (elapsedTime > MAX_PROCESSING_TIME) {
+        console.warn(`⏰ Approaching Hobby plan time limit (${elapsedTime}s), stopping processing early`);
+        console.warn(`📊 Processed ${results.length}/${usersToEmail.length} users before timeout`);
+        break;
+      }
+
       try {
-        console.log(`📧 Processing notification for user ${user.userId} (${user.email})`);
+        console.log(`📧 Processing notification for user ${user.userId} (${user.email}) - ${results.length + 1}/${usersToEmail.length}`);
 
         const result = await processUserNotification({
           userId: user.userId,
@@ -146,17 +158,21 @@ export async function GET(request: NextRequest) {
     const successCount = results.filter(r => r.success).length;
     const failureCount = results.filter(r => !r.success).length;
     const skippedCount = results.filter(r => r.success && r.skipped).length;
+    const processingTime = (Date.now() - startTime) / 1000;
 
-    console.log(`📈 Notification trigger summary: ${successCount} successful (${skippedCount} skipped), ${failureCount} failed`);
+    console.log(`📈 Processing summary: ${successCount} successful (${skippedCount} skipped), ${failureCount} failed in ${processingTime.toFixed(2)}s`);
 
     return NextResponse.json({
       success: true,
-      message: `Triggered notifications for ${usersToEmail.length} users`,
+      message: `Processed ${results.length}/${usersToEmail.length} users`,
       summary: {
-        total: usersToEmail.length,
+        totalUsers: usersToEmail.length,
+        processed: results.length,
         successful: successCount,
         failed: failureCount,
         skipped: skippedCount,
+        processingTimeSeconds: parseFloat(processingTime.toFixed(2)),
+        timedOut: results.length < usersToEmail.length,
       },
       results,
       timestamp: new Date().toISOString(),
@@ -172,6 +188,9 @@ export async function GET(request: NextRequest) {
     }, { status: 500 });
   }
 }
+
+// Set timeout for Hobby plan (60s max)
+export const maxDuration = 60;
 
 // This is important for Vercel functions
 export const dynamic = 'force-dynamic';
