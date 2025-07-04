@@ -6,6 +6,7 @@ import {
   type RemindersByDay,
 } from "@/app/server-functions/get-reminders-by-day";
 import { submitPlantEvent } from "@/app/server-functions/record-plant-event";
+import { updateReminderDate } from "@/app/server-functions/plantEventTypes/update-reminder-date";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ButtonWithConfirmation } from "@/components/ui/button-with-confirmation";
@@ -19,12 +20,16 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import { format } from "date-fns";
+import { format, addDays } from "date-fns";
+import { RescheduleSlider } from "@/components/RescheduleSlider";
 
 export default function RemindersPage() {
   const [remindersByDay, setRemindersByDay] = useState<RemindersByDay[]>([]);
   const [loading, setLoading] = useState(true);
   const [completingReminderId, setCompletingReminderId] = useState<
+    string | null
+  >(null);
+  const [reschedulingReminderId, setReschedulingReminderId] = useState<
     string | null
   >(null);
 
@@ -34,7 +39,7 @@ export default function RemindersPage() {
 
   const loadReminders = async () => {
     setLoading(true);
-    const [result, error] = await getRemindersByDay(14, 7); // Load 2 weeks ahead + 1 week back for overdue
+    const [result, error] = await getRemindersByDay(364, 30);
     if (error) {
       console.error("Failed to load reminders:", error);
       toast.error("Failed to load reminders");
@@ -78,6 +83,72 @@ export default function RemindersPage() {
       toast.error("Something went wrong");
     } finally {
       setCompletingReminderId(null);
+    }
+  };
+
+  const handleRescheduleReminder = async (
+    reminderId: string,
+    days: number,
+    eventTypeName: string,
+    plantName: string
+  ) => {
+    setReschedulingReminderId(reminderId);
+
+    try {
+      const newDate = addDays(new Date(), days);
+      const [, error] = await updateReminderDate({
+        reminderId,
+        scheduledAt: newDate,
+      });
+
+      if (error) {
+        toast.error(`Failed to reschedule ${eventTypeName.toLowerCase()}`);
+        return;
+      }
+
+      const dayText = days === 1 ? "tomorrow" : `in ${days} days`;
+      toast.success(
+        `${eventTypeName} for ${plantName} rescheduled to ${dayText}!`
+      );
+
+      // Reload reminders to reflect the change
+      await loadReminders();
+    } catch {
+      toast.error("Something went wrong");
+    } finally {
+      setReschedulingReminderId(null);
+    }
+  };
+
+  const handleRescheduleWithCustomDate = async (
+    reminderId: string,
+    targetDate: Date,
+    eventTypeName: string,
+    plantName: string
+  ) => {
+    setReschedulingReminderId(reminderId);
+
+    try {
+      const [, error] = await updateReminderDate({
+        reminderId,
+        scheduledAt: targetDate,
+      });
+
+      if (error) {
+        toast.error(`Failed to reschedule ${eventTypeName.toLowerCase()}`);
+        return;
+      }
+
+      toast.success(
+        `${eventTypeName} for ${plantName} rescheduled to ${format(targetDate, "MMM d, yyyy")}!`
+      );
+
+      // Reload reminders to reflect the change
+      await loadReminders();
+    } catch {
+      toast.error("Something went wrong");
+    } finally {
+      setReschedulingReminderId(null);
     }
   };
 
@@ -182,7 +253,7 @@ export default function RemindersPage() {
             <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
               <Info className="w-4 h-4 flex-shrink-0" />
               <span>
-                Only overdue reminders from the last 7 days are shown. Older
+                Only overdue reminders from the last 30 days are shown. Older
                 overdue items are not displayed.
               </span>
             </div>
@@ -251,64 +322,94 @@ export default function RemindersPage() {
 
                           <div className="flex flex-wrap gap-2">
                             {plant.events.map((event) => (
-                              <ButtonWithConfirmation
+                              <div
                                 key={event.reminderId}
-                                size="sm"
-                                variant={
-                                  event.isCompleted ? "secondary" : "outline"
-                                }
-                                disabled={
-                                  event.isCompleted ||
-                                  completingReminderId === event.reminderId
-                                }
-                                style={
-                                  !event.isCompleted
-                                    ? {
-                                        borderColor: event.eventTypeColor,
-                                        color: event.eventTypeColor,
-                                      }
-                                    : {}
-                                }
-                                progressColor={event.eventTypeColor}
-                                className={cn(
-                                  "flex items-center gap-2",
-                                  event.isOverdue &&
-                                    !event.isCompleted &&
-                                    "border-red-500 text-red-500",
-                                  event.isCompleted && "opacity-50"
-                                )}
-                                onConfirm={async () => {
-                                  await handleCompleteReminder(
-                                    plant.plantId,
-                                    event.eventTypeId,
-                                    event.eventTypeName,
-                                    plant.plantName,
-                                    event.reminderId
-                                  );
-                                }}
-                                dialogTitle={`Record ${event.eventTypeName}`}
-                                dialogDescription={`Are you sure you want to record ${event.eventTypeName.toLowerCase()} for ${
-                                  plant.plantName
-                                }?`}
-                                confirmText={`Record ${event.eventTypeName}`}
+                                className="flex items-center gap-1"
                               >
-                                {event.isCompleted && (
-                                  <CheckCircle className="w-4 h-4" />
-                                )}
-                                {event.isOverdue && !event.isCompleted && (
-                                  <AlertTriangle className="w-4 h-4" />
-                                )}
-                                <span>
-                                  {event.eventTypeName}
-                                  {event.isCompleted && " ✓"}
-                                  {event.isOverdue &&
-                                    !event.isCompleted &&
-                                    " (overdue)"}
-                                </span>
-                                {completingReminderId === event.reminderId && (
-                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
-                                )}
-                              </ButtonWithConfirmation>
+                                {/* Main Plant Event Button */}
+                                <ButtonWithConfirmation
+                                  size="sm"
+                                  variant={
+                                    event.isCompleted ? "secondary" : "outline"
+                                  }
+                                  disabled={
+                                    event.isCompleted ||
+                                    completingReminderId === event.reminderId
+                                  }
+                                  style={
+                                    !event.isCompleted
+                                      ? {
+                                          borderColor: event.eventTypeColor,
+                                          color: event.eventTypeColor,
+                                        }
+                                      : {}
+                                  }
+                                  progressColor={event.eventTypeColor}
+                                  className={cn(
+                                    "flex items-center gap-2",
+                                    event.isOverdue &&
+                                      !event.isCompleted &&
+                                      "border-red-500 text-red-500",
+                                    event.isCompleted && "opacity-50"
+                                  )}
+                                  onConfirm={async () => {
+                                    await handleCompleteReminder(
+                                      plant.plantId,
+                                      event.eventTypeId,
+                                      event.eventTypeName,
+                                      plant.plantName,
+                                      event.reminderId
+                                    );
+                                  }}
+                                  dialogTitle={`Record ${event.eventTypeName}`}
+                                  dialogDescription={`Are you sure you want to record ${event.eventTypeName.toLowerCase()} for ${
+                                    plant.plantName
+                                  }?`}
+                                  confirmText={`Record ${event.eventTypeName}`}
+                                >
+                                  {event.isCompleted && (
+                                    <CheckCircle className="w-4 h-4" />
+                                  )}
+                                  {event.isOverdue && !event.isCompleted && (
+                                    <AlertTriangle className="w-4 h-4" />
+                                  )}
+                                  <span>
+                                    {event.eventTypeName}
+                                    {event.isCompleted && " ✓"}
+                                    {event.isOverdue &&
+                                      !event.isCompleted &&
+                                      " (overdue)"}
+                                  </span>
+                                  {completingReminderId ===
+                                    event.reminderId && (
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                                  )}
+                                </ButtonWithConfirmation>
+
+                                {/* Reschedule Slider */}
+                                <RescheduleSlider
+                                  disabled={event.isCompleted}
+                                  isLoading={
+                                    reschedulingReminderId === event.reminderId
+                                  }
+                                  onReschedule={(days) =>
+                                    handleRescheduleReminder(
+                                      event.reminderId,
+                                      days,
+                                      event.eventTypeName,
+                                      plant.plantName
+                                    )
+                                  }
+                                  onCustomDate={(date) =>
+                                    handleRescheduleWithCustomDate(
+                                      event.reminderId,
+                                      date,
+                                      event.eventTypeName,
+                                      plant.plantName
+                                    )
+                                  }
+                                />
+                              </div>
                             ))}
                           </div>
                         </div>

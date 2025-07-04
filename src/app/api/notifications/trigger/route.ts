@@ -26,8 +26,8 @@ async function processUserNotification(userInfo: {
     };
   }
 
-  // Get reminders for the last 7 days (to include overdue) plus today
-  const [remindersByDay, error] = await getRemindersByDayForUser(userInfo.userId, 1, 7); // 1 day ahead, 7 days back
+  // Get reminders for the last 100 days (to include overdue) plus today
+  const [remindersByDay, error] = await getRemindersByDayForUser(userInfo.userId, 1, 100); // 1 day ahead, 100 days back
 
   if (error) {
     console.error(`❌ Failed to get reminders for user ${userInfo.userId}:`, error);
@@ -35,7 +35,7 @@ async function processUserNotification(userInfo: {
   }
 
   if (!remindersByDay || remindersByDay.length === 0) {
-    console.log(`ℹ️ No reminders for user ${userInfo.userId} in the past week`);
+    console.log(`ℹ️ No reminders for user ${userInfo.userId} in the past 100 days`);
     return {
       success: true,
       message: 'No reminders found',

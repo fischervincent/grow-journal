@@ -43,8 +43,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Get reminders for the last 7 days (to include overdue) plus today
-    const [remindersByDay, error] = await getRemindersByDayForUser(userInfo.userId, 1, 7); // 1 day ahead, 7 days back
+    // Get reminders for the last 100 days (to include overdue) plus today
+    const [remindersByDay, error] = await getRemindersByDayForUser(userInfo.userId, 1, 100); // 1 day ahead, 100 days back
 
     if (error) {
       console.error(`❌ Failed to get reminders for user ${userInfo.userId}:`, error);
