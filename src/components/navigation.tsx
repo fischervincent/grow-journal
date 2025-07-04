@@ -91,6 +91,12 @@ export function Navigation() {
                 Locations
               </Link>
             </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/admin/invites" className="flex items-center">
+                <User className="mr-2 h-4 w-4" />
+                Manage Invites
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => {

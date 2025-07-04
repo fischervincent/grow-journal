@@ -34,6 +34,33 @@ export default function SignUp() {
         <CardDescription className="text-xs md:text-sm">
           Enter your information to create an account
         </CardDescription>
+
+        {/* Invite-only warning */}
+        <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+          <div className="flex items-start gap-2">
+            <svg
+              className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+              />
+            </svg>
+            <div className="text-xs">
+              <p className="font-medium text-orange-800">Invite-Only Access</p>
+              <p className="text-orange-700 mt-1">
+                This application is currently invite-only. You can create an
+                account, but you&apos;ll need to be on our invited users list to
+                access the app.
+              </p>
+            </div>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="grid gap-4">

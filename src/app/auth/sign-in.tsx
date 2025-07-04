@@ -15,6 +15,7 @@ import { Loader2 } from "lucide-react";
 import { signIn } from "@/lib/auth-client";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { InviteOnlyNotice } from "@/components/InviteOnlyNotice";
 
 export default function SignIn() {
   const callbackURL = useSearchParams()?.get("callbackURL") || "/plants";
@@ -44,6 +45,9 @@ export default function SignIn() {
           <CardDescription className="text-xs md:text-sm">
             Enter your email below to login to your account
           </CardDescription>
+
+          {/* Invite-only notice */}
+          <InviteOnlyNotice />
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
